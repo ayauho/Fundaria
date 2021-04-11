@@ -540,7 +540,7 @@ class Testing extends HelperSrc {
         _.psDefs.ech(async (val,nm)=>{
             oput=await _.Pool.methods[val]().call()
             if(/Time/.test(val)) oput = new Date(+oput*1000)
-            if(val=='sharePrice') oput=_.toScoin(oput)
+            if(val=='sharePrice'||val=='poolCap') oput=_.toScoin(oput)
             _['$'+val].html(oput)
         })
     }
@@ -583,6 +583,7 @@ class Testing extends HelperSrc {
             let teamShare=48 
             let fundariaShare=1 
             let investmentGuidesRewardShare=10
+            //let poolCap=_.toWei(100)
             let poolCap=0
             let bountyCap = 100000
             let presaleCap = 100000
