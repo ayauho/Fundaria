@@ -28,7 +28,7 @@
     .wrap{flex-wrap:wrap;}
    </style> 
 <script src="https://cdn.jsdelivr.net/npm/web3@1.2.6/dist/web3.min.js"></script>
-<script src="js/src/Helper-src.js?<?=time()?>"></script>
+<script src="js/Helper-src.js?<?=time()?>"></script>
 <script>
 window.COIN='BNB'
 window.SCOIN='BUSD'
@@ -262,7 +262,7 @@ class Testing extends HelperSrc {
         $inv.dtof=_.$({type:'text',placeholder:SCOIN,value:30},'input').to($es)
         $inv.un=_.$('+button').html('undelegate').to($es)
         $inv.rd=_.$('+button').html('Receive dividends').to($es)
-        $inv.cigr=_.$('+button').html('Claim ig reward').to($es)        
+        if( !(_.isPool && n==2) )$inv.cigr=_.$('+button').html('Claim ig reward').to($es)        
 
         $es=_.$('+elements').to($i) 
         
@@ -329,7 +329,7 @@ class Testing extends HelperSrc {
         $inv.invest.onclick = async e=>{
             let next=n+1
             let ig=_.acs[next]
-            if(next==_.acs.length)ig=_.fundariaAddress
+            if(next==_.acs.length && _.isPool)ig=_.fundariaAddress
             l('---Action: Investing from '+investor,_.nowTS)
             l('State before:')            
             await logInvBefore(addr)            
@@ -478,7 +478,7 @@ class Testing extends HelperSrc {
             l('investorReceivedDividends of '+investor, _.toScoin( await _.Pool.methods.investorReceivedDividends(addr).call() ))                         
             l('Action completed.',_.nowTS)
         }
-        $inv.cigr.onclick = async e=>{        
+        if($inv.cigr)$inv.cigr.onclick = async e=>{        
             let ig=_.acs[n+1==_.acs.length?0:n+1]
             let igInvestor =  _.investorFromAddr(ig)
             l('---Action: Claim investment guide reward by '+igInvestor,_.nowTS)    
