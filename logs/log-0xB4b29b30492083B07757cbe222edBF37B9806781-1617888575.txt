@@ -1,0 +1,38 @@
+Task: Check voting in startups 
+Abstract: Show Fundaria smart contract own unique methods workability
+Sequence: Run sale time in startup, invest by Investor2 in startup, invest to startup by Fundaria, vote for dividends by Investor2 in startup, vote for startup dividends by Fundaria, vote for onwer by Investor2 in startup, vote for startup onwer by Fundaria 
+
+Investor0 0x621DD25aDC6550bef3157A04C11C99827Cd24e9c
+Investor1 0xB1Df2e5cAdF41eCa5d807c73622B31Cc5fc697EF
+Investor2 0x989Cdbb1eDCd324367067C1b6Aba4963269eF12D
+BNB/BUSD 366.7745
+---Action: Invest in startup 1617888184
+State before:
+startupAddress 0xE6D1Ef167F74Ca8026784E3E8F36F5FEeb6003EB
+poolScoinBalance 500.00
+fundariaStartupSharesBalance 0
+investedScoin 300
+State after:
+poolScoinBalance 200.01
+fundariaStartupSharesBalance 29885
+Action completed. 1617888203
+---Action: Vote in startup for dividends 1617888328
+State before:
+startupAddress 0xE6D1Ef167F74Ca8026784E3E8F36F5FEeb6003EB
+startupLastVotingId 1
+quorum 5
+uintProposition 80
+State after:
+quorum 51
+startupUintWinProposition 75
+Action completed. 1617888335
+---Action: Vote in startup for owner 1617888523
+State before:
+startupAddress 0xE6D1Ef167F74Ca8026784E3E8F36F5FEeb6003EB
+startupLastVotingId 2
+quorum 5
+voteForOwnerWinAddress 0x989Cdbb1eDCd324367067C1b6Aba4963269eF12D
+State after:
+quorum 51
+voteForOwnerWinAddress 0xB1Df2e5cAdF41eCa5d807c73622B31Cc5fc697EF
+Action completed. 1617888530

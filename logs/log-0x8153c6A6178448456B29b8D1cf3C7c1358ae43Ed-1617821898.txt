@@ -1,0 +1,260 @@
+Task: Show correctness if receiving dividends with 2 phases
+Abstract: Receive dividends on the phase 1 by Investor0, on the phase 2 by Investor0 & Investor1. And claiming IG reward.
+Sequence: Transact in (for income), invest by Investor0, claim investment guide reward on short fin. period 1, receive dividends at the end of business period, start nex investment phase, invest by Investors 0&1, receive dividends by both, available == Pool scoin balance
+
+Investor0 0x621DD25aDC6550bef3157A04C11C99827Cd24e9c
+Investor1 0xB1Df2e5cAdF41eCa5d807c73622B31Cc5fc697EF
+Investor2 0x989Cdbb1eDCd324367067C1b6Aba4963269eF12D
+BNB/BUSD 410.8438
+---Action: Transact in by Investor0 1617820181
+State before:
+coinBalanceOfInvestor0 81.5431
+scoinBalanceOfInvestor0 30971987.75
+poolScoinBalance 0.00
+State after:
+coinBalanceOfInvestor0 81.5431
+scoinBalanceOfInvestor0 30971987.75
+poolScoinBalance 100.00
+Action completed. 1617820207
+---Action: Prepare sale 1617820208
+saleStartTime 1617820208
+saleEndTime 1617820268
+shortFinancePeriod 60
+longFinancePeriod 600
+longFinancePeriodEndTime 1617820868
+sharePrice 0.01
+saleShare 51
+teamShare 48
+investmentGuidesRewardShare 10
+poolCap 0
+bountyCap 100000
+presaleCap 100000
+airdropCap 100000
+Action completed. 1617820227
+---Action: Investing from Investor0 1617820233
+State before:
+coinBalanceOfInvestor0 81.5366
+scoinBalanceOfInvestor0 30971887.75
+investedScoinByInvestor0 0.00
+investmentGuideReward 0.00
+sharesOfInvestor0 0
+lockedTeamShares 0
+lockedFundariaShares 0
+totalSupply 0
+State after:
+coinBalanceOfInvestor0 81.4273
+scoinBalanceOfInvestor0 30971887.75
+investedScoinByInvestor0 43.69
+investmentGuideReward 4.37
+sharesOfInvestor0 4369
+lockedTeamShares 4112
+lockedFundariaShares 85
+teamShares 4369
+fundariaShares 0
+totalSupply 8566
+Action completed. 1617820262
+Act: Prepare long finance period 1617820286
+State before:
+period 1
+longFinancePeriodPrepared false
+State after:
+period 1
+longFinancePeriodPrepared true
+Action completed. 1617820294
+---Action: Claim investment guide reward by Investor1 1617820296
+State before:
+poolScoinBalance 143.69
+scoinBalanceOfInvestor1 215.12
+investmentGuideClaimedReward 0.00
+investmentGuideRewardAvailable 0.44
+claimedInvestmentGuideTotal 0.00
+State after:
+poolScoinBalance 143.25
+scoinBalanceOfInvestor1 215.56
+investmentGuideClaimedReward 0.44
+investmentGuideRewardAvailable 0.00
+claimedInvestmentGuideTotal 0.44
+Action completed. 1617820324
+---Action: Allowing dividends payment 1617821033
+State before:
+dividendingIncome 0.00
+---Action: Receive dividends to Investor0 1617821045
+State before:
+scoinBalanceOfInvestor0 30971887.75
+poolScoinBalance 143.25
+dividendsToReceive 25.39
+_balancesLockedTill 0
+investorReceivedDividends of Investor0 0.00
+dividendsPaymentPeriodEndTime 1617821213
+State after:
+dividendingIncome 49.78
+dividendsPaymentPeriodEndTime NaN
+Action completed. 1617821054
+State after:
+scoinBalanceOfInvestor0 30971913.14
+poolScoinBalance 117.86
+dividendsToReceive 0.00
+_balancesLockedTill 1617821213
+investorReceivedDividends of Investor0 25.39
+Action completed. 1617821074
+---Action: Claim investment guide reward by Investor1 1617821120
+State before:
+poolScoinBalance 117.86
+scoinBalanceOfInvestor1 215.56
+investmentGuideClaimedReward 0.44
+investmentGuideRewardAvailable 3.93
+claimedInvestmentGuideTotal 0.44
+State after:
+poolScoinBalance 113.93
+scoinBalanceOfInvestor1 219.49
+investmentGuideClaimedReward 4.37
+investmentGuideRewardAvailable 0.00
+claimedInvestmentGuideTotal 4.37
+Action completed. 1617821145
+---Action: Prepare sale 1617821156
+saleStartTime 1617821156
+saleEndTime 1617821216
+shortFinancePeriod 60
+longFinancePeriod 600
+longFinancePeriodEndTime 1617821816
+sharePrice 0.01
+saleShare 51
+teamShare 48
+investmentGuidesRewardShare 10
+poolCap 0
+bountyCap 100000
+presaleCap 100000
+airdropCap 100000
+Action completed. 1617821175
+---Action: Investing from Investor0 1617821178
+State before:
+coinBalanceOfInvestor0 81.4185
+scoinBalanceOfInvestor0 30971913.14
+---Action: Investing from Investor1 1617821179
+State before:
+investedScoinByInvestor0 0.00
+coinBalanceOfInvestor1 59.0839
+investmentGuideReward 0.00
+scoinBalanceOfInvestor1 219.49
+sharesOfInvestor0 8481
+investedScoinByInvestor1 0.00
+lockedTeamShares 0
+investmentGuideReward 0.00
+lockedFundariaShares 0
+sharesOfInvestor1 0
+totalSupply 8566
+lockedTeamShares 0
+lockedFundariaShares 0
+totalSupply 8566
+State after:
+coinBalanceOfInvestor0 81.3114
+scoinBalanceOfInvestor0 30971913.15
+investedScoinByInvestor0 42.48
+investmentGuideReward 4.25
+sharesOfInvestor0 12729
+lockedTeamShares 8052
+lockedFundariaShares 167
+teamShares 12729
+fundariaShares 85
+totalSupply 25341
+Action completed. 1617821206
+State after:
+coinBalanceOfInvestor1 58.9750
+scoinBalanceOfInvestor1 219.49
+investedScoinByInvestor1 43.08
+investmentGuideReward 4.31
+sharesOfInvestor1 4308
+lockedTeamShares 8052
+lockedFundariaShares 167
+teamShares 12729
+fundariaShares 85
+totalSupply 25341
+Action completed. 1617821207
+Act: Prepare long finance period 1617821243
+State before:
+period 1
+longFinancePeriodPrepared false
+State after:
+period 1
+longFinancePeriodPrepared true
+Action completed. 1617821251
+---Action: Transact in by Investor0 1617821599
+State before:
+coinBalanceOfInvestor0 81.3114
+scoinBalanceOfInvestor0 30971913.15
+poolScoinBalance 199.49
+State after:
+coinBalanceOfInvestor0 81.3114
+scoinBalanceOfInvestor0 30971913.15
+poolScoinBalance 299.49
+Action completed. 1617821624
+---Action: Allowing dividends payment 1617821680
+State before:
+dividendingIncome 24.39
+State after:
+dividendingIncome 119.16
+dividendsPaymentPeriodEndTime NaN
+Action completed. 1617821702
+---Action: Receive dividends to Investor0 1617821703
+State before:
+scoinBalanceOfInvestor0 30971813.15
+poolScoinBalance 299.49
+dividendsToReceive 47.22
+_balancesLockedTill 1617821213
+investorReceivedDividends of Investor0 25.39
+dividendsPaymentPeriodEndTime 1617821861
+State after:
+scoinBalanceOfInvestor0 30971860.37
+poolScoinBalance 252.27
+dividendsToReceive 0.00
+_balancesLockedTill 1617821861
+investorReceivedDividends of Investor0 72.61
+Action completed. 1617821731
+---Action: Receive dividends to Investor1 1617821733
+State before:
+scoinBalanceOfInvestor1 219.49
+poolScoinBalance 252.27
+dividendsToReceive 24.57
+_balancesLockedTill 0
+investorReceivedDividends of Investor1 0.00
+dividendsPaymentPeriodEndTime 1617821861
+State after:
+scoinBalanceOfInvestor1 244.07
+poolScoinBalance 227.70
+dividendsToReceive 0.00
+_balancesLockedTill 1617821861
+investorReceivedDividends of Investor1 24.57
+Action completed. 1617821761
+---Action: Claim investment guide reward by Investor1 1617821768
+State before:
+poolScoinBalance 227.70
+scoinBalanceOfInvestor1 244.07
+investmentGuideClaimedReward 0.00
+investmentGuideRewardAvailable 4.25
+claimedInvestmentGuideTotal 0.00
+---Action: Claim investment guide reward by Investor2 1617821781
+State before:
+poolScoinBalance 227.70
+scoinBalanceOfInvestor2 682.62
+investmentGuideClaimedReward 0.00
+investmentGuideRewardAvailable 4.31
+claimedInvestmentGuideTotal 4.25
+State after:
+poolScoinBalance 223.45
+scoinBalanceOfInvestor1 248.31
+investmentGuideClaimedReward 4.25
+investmentGuideRewardAvailable 0.00
+claimedInvestmentGuideTotal 8.56
+Action completed. 1617821796
+State after:
+poolScoinBalance 219.14
+scoinBalanceOfInvestor2 686.93
+investmentGuideClaimedReward 4.31
+investmentGuideRewardAvailable 0.00
+claimedInvestmentGuideTotal 8.56
+Action completed. 1617821808
+---Action: check 1617821880
+nowShortFinancePeriodNum 10
+available 219.14
+poolScoinBalance 219.14
+Action completed. 1617821880

@@ -1,0 +1,41 @@
+Task: Check claim investment guide reward in startup, receive dividends in startup
+Abstract: Show Fundaria smart contract own unique methods workability
+Sequence: Run sale time on startup, invest to startup by Investor2, invest to startup by Fundaria, claim investment guide reward by Fundaria. Check available == pool stable coin balance.
+
+Investor0 0x621DD25aDC6550bef3157A04C11C99827Cd24e9c
+Investor1 0xB1Df2e5cAdF41eCa5d807c73622B31Cc5fc697EF
+Investor2 0x989Cdbb1eDCd324367067C1b6Aba4963269eF12D
+BNB/BUSD 376.4789
+---Action: Invest in startup 1617884628
+State before:
+startupAddress 0xCB408E7113CDb02ebC258BE3396f08C837D2A826
+poolScoinBalance 300.00
+fundariaStartupSharesBalance 0
+investedScoin 100
+State after:
+poolScoinBalance 200.01
+fundariaStartupSharesBalance 9960
+Action completed. 1617884646
+---Action: Claim investment guide reward from startup 1617884735
+State before:
+startupAddress 0xCB408E7113CDb02ebC258BE3396f08C837D2A826
+investedBy Investor2
+poolScoinBalance 200.01
+startupInvestmentGuideRewardAvailable 1.59
+State after:
+poolScoinBalance 201.59
+startupInvestmentGuideRewardAvailable 0.00
+Action completed. 1617884751
+---Action: Receive dividends in startup 1617884814
+State before:
+poolScoinBalance 201.59
+fundariaStartupReceivedDividends 0.00
+State after:
+poolScoinBalance 215.56
+fundariaStartupReceivedDividends 13.97
+Action completed. 1617884833
+---Action: check 1617884844
+nowShortFinancePeriodNum 0
+available 215.56
+poolScoinBalance 215.56
+Action completed. 1617884844

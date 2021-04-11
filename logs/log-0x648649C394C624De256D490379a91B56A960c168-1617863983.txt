@@ -1,0 +1,115 @@
+Task:Show voting for dividends.
+Abstract: Vote for dividend by Investors 1&2, and by Investor0 as holder of locked shares.
+Sequence: Invest by Investors 1&2, set dividends voting, vote by all investors, apply voting results.
+
+Investor0 0x621DD25aDC6550bef3157A04C11C99827Cd24e9c
+Investor1 0xB1Df2e5cAdF41eCa5d807c73622B31Cc5fc697EF
+Investor2 0x989Cdbb1eDCd324367067C1b6Aba4963269eF12D
+BNB/BUSD 394.3819
+---Action: Prepare sale 1617863415
+saleStartTime 1617863416
+saleEndTime 1617863476
+shortFinancePeriod 60
+longFinancePeriod 600
+longFinancePeriodEndTime 1617864076
+sharePrice 0.01
+saleShare 51
+teamShare 48
+investmentGuidesRewardShare 10
+poolCap 0
+bountyCap 100000
+presaleCap 100000
+airdropCap 100000
+Action completed. 1617863434
+---Action: Investing from Investor1 1617863446
+State before:
+coinBalanceOfInvestor1 64.9688
+---Action: Investing from Investor2 1617863447
+State before:
+scoinBalanceOfInvestor1 255.64
+coinBalanceOfInvestor2 65.2571
+investedScoinByInvestor1 0.00
+scoinBalanceOfInvestor2 686.93
+investmentGuideReward 0.00
+investedScoinByInvestor2 0.00
+sharesOfInvestor1 0
+investmentGuideReward 0.00
+lockedTeamShares 0
+sharesOfInvestor2 0
+lockedFundariaShares 0
+lockedTeamShares 0
+totalSupply 0
+lockedFundariaShares 0
+totalSupply 0
+State after:
+coinBalanceOfInvestor1 64.8593
+State after:
+coinBalanceOfInvestor2 65.0497
+scoinBalanceOfInvestor1 255.65
+investedScoinByInvestor1 41.89
+investmentGuideReward 4.19
+sharesOfInvestor1 4189
+lockedTeamShares 11666
+lockedFundariaShares 242
+teamShares 0
+fundariaShares 0
+totalSupply 24304
+Action completed. 1617863472
+scoinBalanceOfInvestor2 686.93
+investedScoinByInvestor2 82.07
+investmentGuideReward 8.21
+sharesOfInvestor2 8207
+lockedTeamShares 11666
+lockedFundariaShares 242
+teamShares 0
+fundariaShares 0
+totalSupply 24304
+Action completed. 1617863472
+Act: Prepare long finance period 1617863830
+State before:
+period 1
+longFinancePeriodPrepared false
+State after:
+period 1
+longFinancePeriodPrepared true
+Action completed. 1617863838
+---Action: setVoting for dividends 1617863845
+State before:
+votingId 0
+State after:
+votingId 1
+votingStartTime 1617863845
+votingEndTime 1617864025
+Action completed. 1617863855
+---Action: Vote for dividends share in income by Investor1 1617863875
+State before:
+voteForDividendsQuorum 0
+voteForDividendsWinUint 0
+State after:
+voteForDividendsQuorum 17
+voteForDividendsWinUint 60
+Action completed. 1617863884
+---Action: Vote for dividends share in income by Investor2 1617863887
+State before:
+voteForDividendsQuorum 17
+voteForDividendsWinUint 60
+State after:
+voteForDividendsQuorum 51
+voteForDividendsWinUint 36
+Action completed. 1617863897
+---Action: Vote for dividends share in income by Investor0 1617863900
+State before:
+voteForDividendsQuorum 51
+voteForDividendsWinUint 36
+State after:
+voteForDividendsQuorum 99
+voteForDividendsWinUint 36
+Action completed. 1617863909
+---Action: Apply voting results for dividends 1617863967
+State before:
+votingId 1
+quorum 99
+dividendsIncomePercentage 50
+State after:
+dividendsIncomePercentage 36
+Action completed. 1617863973

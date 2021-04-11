@@ -1,0 +1,27 @@
+Task: Invest in statup, withdraw investment from startup
+Abstract: Show Fundaria smart contract own unique methods workability
+Sequence: Invest to startup, withdraw remaining investments
+
+Investor0 0x621DD25aDC6550bef3157A04C11C99827Cd24e9c
+Investor1 0xB1Df2e5cAdF41eCa5d807c73622B31Cc5fc697EF
+Investor2 0x989Cdbb1eDCd324367067C1b6Aba4963269eF12D
+BNB/BUSD 419.4344
+---Action: Invest in startup 1617879729
+State before:
+startupAddress 0xad6Ad186fdee62A3B09262980b3e1218D9fFa4B6
+poolScoinBalance 100.00
+fundariaStartupSharesBalance 0
+investedScoin 100
+State after:
+poolScoinBalance 0.01
+fundariaStartupSharesBalance 9960
+Action completed. 1617879747
+---Action: Withdraw investment from startup 1617879941
+State before:
+startupAddress 0xad6Ad186fdee62A3B09262980b3e1218D9fFa4B6
+poolScoinBalance 0.01
+fundariaStartupSharesBalance 9960
+State after:
+poolScoinBalance 69.73
+fundariaStartupSharesBalance 0
+Action completed. 1617879957

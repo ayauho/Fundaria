@@ -1,0 +1,394 @@
+Task: Show matching of available amount with pool stable coin balance.
+Abstract: Do things, which investors and investment guides usually will do & check if finance pool is in correct state after 2-nd investment phase.
+Sequence: Invest, withdraw, reject withdrawal, claim IG rewards on the first investment phase; the same on the 2-nd investment phase.
+
+Investor0 0x621DD25aDC6550bef3157A04C11C99827Cd24e9c
+Investor1 0xB1Df2e5cAdF41eCa5d807c73622B31Cc5fc697EF
+Investor2 0x989Cdbb1eDCd324367067C1b6Aba4963269eF12D
+BNB/BUSD 252.2157
+---Action: Prepare sale 1617691210
+saleStartTime 1617691211
+saleEndTime 1617691271
+shortFinancePeriod 60
+longFinancePeriod 600
+longFinancePeriodEndTime 1617691871
+sharePrice 0.01
+saleShare 51
+teamShare 48
+investmentGuidesRewardShare 10
+poolCap 0
+bountyCap 100000
+presaleCap 100000
+airdropCap 100000
+Action completed. 1617691228
+---Action: Investing from Investor0 1617691231
+State before:
+coinBalanceOfInvestor0 77.4530
+scoinBalanceOfInvestor0 30992215.65
+---Action: Investing from Investor1 1617691233
+State before:
+investedScoinByInvestor0 0.00
+coinBalanceOfInvestor1 54.1566
+investmentGuideReward 0.00
+scoinBalanceOfInvestor1 139.12
+---Action: Investing from Investor2 1617691234
+State before:
+sharesOfInvestor0 0
+investedScoinByInvestor1 0.00
+coinBalanceOfInvestor2 54.3946
+lockedTeamShares 0
+investmentGuideReward 0.00
+scoinBalanceOfInvestor2 255.78
+lockedFundariaShares 0
+sharesOfInvestor1 0
+investedScoinByInvestor2 0.00
+totalSupply 0
+lockedTeamShares 0
+investmentGuideReward 0.00
+lockedFundariaShares 0
+sharesOfInvestor2 0
+totalSupply 0
+lockedTeamShares 0
+lockedFundariaShares 0
+totalSupply 0
+State after:
+coinBalanceOfInvestor0 77.3434
+scoinBalanceOfInvestor0 30992215.66
+investedScoinByInvestor0 26.47
+investmentGuideReward 2.65
+sharesOfInvestor0 2647
+lockedTeamShares 7391
+lockedFundariaShares 152
+teamShares 2647
+fundariaShares 0
+totalSupply 15397
+Action completed. 1617691258
+State after:
+coinBalanceOfInvestor1 54.0492
+State after:
+coinBalanceOfInvestor2 54.2869
+scoinBalanceOfInvestor1 139.13
+investedScoinByInvestor1 25.89
+investmentGuideReward 2.59
+sharesOfInvestor1 2589
+lockedTeamShares 7391
+lockedFundariaShares 152
+teamShares 2647
+fundariaShares 0
+totalSupply 15397
+Action completed. 1617691261
+scoinBalanceOfInvestor2 255.79
+investedScoinByInvestor2 26.18
+investmentGuideReward 2.62
+sharesOfInvestor2 2618
+lockedTeamShares 7391
+lockedFundariaShares 152
+teamShares 2647
+fundariaShares 0
+totalSupply 15397
+Action completed. 1617691261
+Act: Prepare long finance period 1617691308
+State before:
+period 1
+longFinancePeriodPrepared false
+State after:
+period 1
+longFinancePeriodPrepared true
+Action completed. 1617691317
+---Action: Claim investment guide reward by Investor2 1617691325
+State before:
+poolScoinBalance 78.54
+scoinBalanceOfInvestor2 255.79
+investmentGuideClaimedReward 0.00
+investmentGuideRewardAvailable 0.26
+claimedInvestmentGuideTotal 0.00
+State after:
+poolScoinBalance 78.02
+scoinBalanceOfInvestor2 256.30
+investmentGuideClaimedReward 0.52
+investmentGuideRewardAvailable 0.00
+claimedInvestmentGuideTotal 0.52
+Action completed. 1617691351
+---Action: Withdrawing investment of Investor1 1617691386
+State before:
+nowShortFinancePeriodNum 2
+coinBalanceOfInvestor1 54.0492
+scoinBalanceOfInvestor1 139.13
+investedScoinByInvestor1 25.89
+investmentGuideReward 2.59
+sharesOfInvestor1 2589
+lockedTeamShares 7391
+lockedFundariaShares 152
+totalSupply 15397
+State after:
+nowShortFinancePeriodNum 3
+coinBalanceOfInvestor1 54.0427
+scoinBalanceOfInvestor1 157.25
+investedScoinByInvestor1 25.89
+investmentGuideReward 2.59
+sharesOfInvestor1 0
+lockedTeamShares 5686
+lockedFundariaShares 117
+teamShares 2647
+fundariaShares 0
+totalSupply 11068
+Action completed. 1617691413
+---Action: Reject investment withdrawal of Investor2 1617691419
+State before:
+rejectedInvestmentWithdrawals 0.00
+nowShortFinancePeriodNum 3
+available 20.84
+State after:
+rejectedInvestmentWithdrawals 26.18
+nowShortFinancePeriodNum 3
+available 37.46
+Action completed. 1617691444
+---Action: Claim investment guide reward by Investor1 1617691505
+State before:
+poolScoinBalance 59.90
+scoinBalanceOfInvestor1 157.25
+investmentGuideClaimedReward 0.00
+investmentGuideRewardAvailable 1.06
+claimedInvestmentGuideTotal 0.52
+State after:
+poolScoinBalance 58.58
+scoinBalanceOfInvestor1 158.58
+investmentGuideClaimedReward 1.32
+investmentGuideRewardAvailable 0.00
+claimedInvestmentGuideTotal 1.84
+Action completed. 1617691531
+---Action: Claim investment guide reward by Investor1 1617691849
+State before:
+poolScoinBalance 58.58
+scoinBalanceOfInvestor1 158.58
+investmentGuideClaimedReward 1.32
+investmentGuideRewardAvailable 1.32
+---Action: Claim investment guide reward by Investor2 1617691851
+State before:
+poolScoinBalance 58.58
+claimedInvestmentGuideTotal 1.84
+scoinBalanceOfInvestor2 256.30
+investmentGuideClaimedReward 0.52
+investmentGuideRewardAvailable 0.26
+claimedInvestmentGuideTotal 1.84
+---Action: Claim investment guide reward by Investor0 1617691854
+State before:
+poolScoinBalance 58.58
+scoinBalanceOfInvestor0 30992215.66
+investmentGuideClaimedReward 0.00
+investmentGuideRewardAvailable 2.62
+claimedInvestmentGuideTotal 1.84
+State after:
+poolScoinBalance 54.38
+State after:
+poolScoinBalance 54.38
+scoinBalanceOfInvestor1 159.90
+scoinBalanceOfInvestor2 256.56
+investmentGuideClaimedReward 2.65
+investmentGuideClaimedReward 0.78
+investmentGuideRewardAvailable 0.00
+claimedInvestmentGuideTotal 6.04
+Action completed. 1617691876
+investmentGuideRewardAvailable 0.00
+claimedInvestmentGuideTotal 6.04
+Action completed. 1617691876
+State after:
+poolScoinBalance 54.38
+scoinBalanceOfInvestor0 30992218.28
+investmentGuideClaimedReward 2.62
+investmentGuideRewardAvailable 0.00
+claimedInvestmentGuideTotal 6.04
+Action completed. 1617691880
+---Action: Prepare sale 1617691921
+saleStartTime 1617691922
+saleEndTime 1617691982
+shortFinancePeriod 60
+longFinancePeriod 600
+longFinancePeriodEndTime 1617692582
+sharePrice 0.01
+saleShare 51
+teamShare 48
+investmentGuidesRewardShare 10
+poolCap 0
+bountyCap 100000
+presaleCap 100000
+airdropCap 100000
+Action completed. 1617691939
+---Action: Investing from Investor0 1617691943
+State before:
+coinBalanceOfInvestor0 77.3367
+scoinBalanceOfInvestor0 30992218.28
+---Action: Investing from Investor1 1617691945
+State before:
+coinBalanceOfInvestor1 54.0386
+investedScoinByInvestor0 0.00
+scoinBalanceOfInvestor1 159.90
+investmentGuideReward 0.00
+---Action: Investing from Investor2 1617691946
+State before:
+investedScoinByInvestor1 0.00
+sharesOfInvestor0 8333
+coinBalanceOfInvestor2 54.2797
+investmentGuideReward 0.00
+lockedTeamShares 0
+scoinBalanceOfInvestor2 256.56
+sharesOfInvestor1 0
+lockedFundariaShares 0
+investedScoinByInvestor2 0.00
+lockedTeamShares 0
+totalSupply 11068
+investmentGuideReward 0.00
+lockedFundariaShares 0
+sharesOfInvestor2 2618
+totalSupply 11068
+lockedTeamShares 0
+lockedFundariaShares 0
+totalSupply 11068
+State after:
+coinBalanceOfInvestor0 77.2296
+State after:
+coinBalanceOfInvestor1 53.9296
+scoinBalanceOfInvestor0 30992218.29
+investedScoinByInvestor0 25.33
+investmentGuideReward 2.53
+sharesOfInvestor0 10866
+lockedTeamShares 7152
+lockedFundariaShares 148
+teamShares 10866
+fundariaShares 117
+totalSupply 25968
+Action completed. 1617691972
+scoinBalanceOfInvestor1 159.91
+investedScoinByInvestor1 25.61
+investmentGuideReward 2.56
+sharesOfInvestor1 2561
+lockedTeamShares 7152
+lockedFundariaShares 148
+teamShares 10866
+fundariaShares 117
+totalSupply 25968
+Action completed. 1617691972
+State after:
+coinBalanceOfInvestor2 54.1723
+scoinBalanceOfInvestor2 256.57
+investedScoinByInvestor2 25.06
+investmentGuideReward 2.51
+sharesOfInvestor2 5124
+lockedTeamShares 7152
+lockedFundariaShares 148
+teamShares 10866
+fundariaShares 117
+totalSupply 25968
+Action completed. 1617691974
+Act: Prepare long finance period 1617692087
+State before:
+period 1
+longFinancePeriodPrepared false
+State after:
+period 1
+longFinancePeriodPrepared true
+Action completed. 1617692093
+---Action: Claim investment guide reward by Investor0 1617692153
+State before:
+poolScoinBalance 130.38
+scoinBalanceOfInvestor0 30992218.29
+investmentGuideClaimedReward 0.00
+investmentGuideRewardAvailable 0.75
+claimedInvestmentGuideTotal 0.00
+State after:
+poolScoinBalance 129.37
+scoinBalanceOfInvestor0 30992219.29
+investmentGuideClaimedReward 1.00
+investmentGuideRewardAvailable 0.00
+claimedInvestmentGuideTotal 1.00
+Action completed. 1617692180
+---Action: Withdrawing investment of Investor0 1617692199
+State before:
+nowShortFinancePeriodNum 4
+coinBalanceOfInvestor0 77.2268
+scoinBalanceOfInvestor0 30992219.29
+investedScoinByInvestor0 25.33
+investmentGuideReward 2.53
+sharesOfInvestor0 10866
+lockedTeamShares 7152
+lockedFundariaShares 148
+totalSupply 25968
+State after:
+nowShortFinancePeriodNum 4
+coinBalanceOfInvestor0 77.2205
+scoinBalanceOfInvestor0 30992234.49
+investedScoinByInvestor0 25.33
+investmentGuideReward 2.53
+sharesOfInvestor0 8333
+lockedTeamShares 5722
+lockedFundariaShares 119
+teamShares 8333
+fundariaShares 117
+totalSupply 21976
+Action completed. 1617692226
+---Action: Claim investment guide reward by Investor2 1617692241
+State before:
+poolScoinBalance 114.17
+scoinBalanceOfInvestor2 256.57
+investmentGuideClaimedReward 0.00
+investmentGuideRewardAvailable 1.28
+claimedInvestmentGuideTotal 1.00
+State after:
+poolScoinBalance 112.89
+scoinBalanceOfInvestor2 257.85
+investmentGuideClaimedReward 1.28
+investmentGuideRewardAvailable 0.00
+claimedInvestmentGuideTotal 2.28
+Action completed. 1617692266
+---Action: Reject investment withdrawal of Investor1 1617692305
+State before:
+rejectedInvestmentWithdrawals 0.00
+nowShortFinancePeriodNum 6
+available 89.94
+State after:
+rejectedInvestmentWithdrawals 25.61
+nowShortFinancePeriodNum 6
+available 99.47
+Action completed. 1617692332
+---Action: Claim investment guide reward by Investor2 1617692458
+State before:
+poolScoinBalance 112.89
+scoinBalanceOfInvestor2 257.85
+investmentGuideClaimedReward 1.28
+investmentGuideRewardAvailable 1.28
+claimedInvestmentGuideTotal 2.28
+State after:
+poolScoinBalance 111.61
+scoinBalanceOfInvestor2 259.13
+investmentGuideClaimedReward 2.56
+investmentGuideRewardAvailable 0.00
+claimedInvestmentGuideTotal 3.56
+Action completed. 1617692483
+---Action: Claim investment guide reward by Investor0 1617692553
+State before:
+poolScoinBalance 111.61
+scoinBalanceOfInvestor0 30992234.49
+investmentGuideClaimedReward 1.00
+investmentGuideRewardAvailable 1.50
+claimedInvestmentGuideTotal 3.56
+State after:
+poolScoinBalance 110.11
+scoinBalanceOfInvestor0 30992235.99
+investmentGuideClaimedReward 2.51
+investmentGuideRewardAvailable 0.00
+claimedInvestmentGuideTotal 5.07
+Action completed. 1617692579
+---Action: Claim investment guide reward by Investor1 1617692581
+State before:
+poolScoinBalance 110.11
+scoinBalanceOfInvestor1 159.91
+investmentGuideClaimedReward 0.00
+investmentGuideRewardAvailable 1.01
+claimedInvestmentGuideTotal 5.07
+State after:
+poolScoinBalance 109.10
+scoinBalanceOfInvestor1 160.92
+investmentGuideClaimedReward 1.01
+investmentGuideRewardAvailable 0.00
+claimedInvestmentGuideTotal 6.08
+Action completed. 1617692606

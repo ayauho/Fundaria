@@ -1,0 +1,81 @@
+Task: Show correctness of delegate of outer transactions.
+Abstract: Investing and runing delegateTransactOut on two investors, redelegating to third investor and check trasact out method.
+Sequence: Invest, delegete transact out by Investor1 to Investor2, delegete transact out by Investor2 to Investor3, transact out by Investor3.
+
+Investor0 0x621DD25aDC6550bef3157A04C11C99827Cd24e9c
+Investor1 0xB1Df2e5cAdF41eCa5d807c73622B31Cc5fc697EF
+Investor2 0x989Cdbb1eDCd324367067C1b6Aba4963269eF12D
+BNB/BUSD 197.5967
+---Action: Prepare sale 1617778803
+saleStartTime 1617778804
+saleEndTime 1617778864
+shortFinancePeriod 60
+longFinancePeriod 600
+longFinancePeriodEndTime 1617779464
+sharePrice 0.01
+saleShare 51
+teamShare 48
+investmentGuidesRewardShare 10
+poolCap 0
+bountyCap 100000
+presaleCap 100000
+airdropCap 100000
+Action completed. 1617778820
+---Action: Investing from Investor0 1617778822
+State before:
+coinBalanceOfInvestor0 79.5544
+scoinBalanceOfInvestor0 30988828.27
+investedScoinByInvestor0 0.00
+investmentGuideReward 0.00
+sharesOfInvestor0 0
+lockedTeamShares 0
+lockedFundariaShares 0
+totalSupply 0
+State after:
+coinBalanceOfInvestor0 79.4449
+scoinBalanceOfInvestor0 30988828.28
+investedScoinByInvestor0 20.62
+investmentGuideReward 2.06
+sharesOfInvestor0 2062
+lockedTeamShares 1940
+lockedFundariaShares 40
+teamShares 2062
+fundariaShares 0
+totalSupply 4042
+Action completed. 1617778849
+---Action: Delegated by Investor0 to Investor1 amount 20 1617778983
+State before:
+delegatedTransactOut 0.00
+delegatedTransactOutTotal 0.00
+State after:
+delegatedTransactOut 20.00
+delegatedTransactOutTotal 20.00
+Action completed. 1617778993
+---Action: Delegated by Investor1 to Investor2 amount 15 1617779011
+State before:
+delegatedTransactOut 0.00
+delegatedTransactOutTotal 0.00
+State after:
+delegatedTransactOut 15.00
+delegatedTransactOutTotal 15.00
+Action completed. 1617779020
+Act: Prepare long finance period 1617779348
+State before:
+period 1
+longFinancePeriodPrepared false
+State after:
+period 1
+longFinancePeriodPrepared true
+Action completed. 1617779355
+---Action: Transact out by Investor2 1617779358
+State before:
+poolScoinBalance 20.62
+scoinBalanceOfInvestor0 30988828.28
+income 0.00
+available 16.70
+State after:
+poolScoinBalance 6.62
+scoinBalanceOfInvestor0 30988842.28
+income -14.00
+available 2.70
+Action completed. 1617779383

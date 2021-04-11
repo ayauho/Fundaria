@@ -1,0 +1,140 @@
+Task: Show owner voting
+Abstract: Vot for owner from 3 investors which have different amounts of shares
+Sequence: Invest by Investors 0&1 0.1 BNB, invest by Investor2 0.3 BNB, vote from Investors 1,0,2 and watch how onwer address is changed
+
+Investor0 0x621DD25aDC6550bef3157A04C11C99827Cd24e9c
+Investor1 0xB1Df2e5cAdF41eCa5d807c73622B31Cc5fc697EF
+Investor2 0x989Cdbb1eDCd324367067C1b6Aba4963269eF12D
+BNB/BUSD 355.0284
+---Action: Prepare sale 1617864829
+saleStartTime 1617864830
+saleEndTime 1617864890
+shortFinancePeriod 60
+longFinancePeriod 600
+longFinancePeriodEndTime 1617865490
+sharePrice 0.01
+saleShare 51
+teamShare 48
+investmentGuidesRewardShare 10
+poolCap 0
+bountyCap 100000
+presaleCap 100000
+airdropCap 100000
+Action completed. 1617864848
+---Action: Investing from Investor0 1617864851
+State before:
+coinBalanceOfInvestor0 87.0928
+scoinBalanceOfInvestor0 30971941.65
+investedScoinByInvestor0 0.00
+---Action: Investing from Investor1 1617864853
+State before:
+investmentGuideReward 0.00
+coinBalanceOfInvestor1 64.5781
+sharesOfInvestor0 0
+scoinBalanceOfInvestor1 255.65
+---Action: Investing from Investor2 1617864854
+State before:
+lockedTeamShares 0
+investedScoinByInvestor1 0.00
+coinBalanceOfInvestor2 64.7345
+lockedFundariaShares 0
+investmentGuideReward 0.00
+scoinBalanceOfInvestor2 686.94
+totalSupply 0
+sharesOfInvestor1 0
+investedScoinByInvestor2 0.00
+lockedTeamShares 0
+investmentGuideReward 0.00
+lockedFundariaShares 0
+sharesOfInvestor2 0
+totalSupply 0
+lockedTeamShares 0
+lockedFundariaShares 0
+totalSupply 0
+State after:
+coinBalanceOfInvestor0 86.9854
+scoinBalanceOfInvestor0 30971941.66
+investedScoinByInvestor0 37.10
+investmentGuideReward 3.71
+sharesOfInvestor0 3710
+lockedTeamShares 17236
+lockedFundariaShares 357
+teamShares 3710
+fundariaShares 0
+totalSupply 35909
+Action completed. 1617864879
+State after:
+coinBalanceOfInvestor1 64.4685
+scoinBalanceOfInvestor1 255.65
+investedScoinByInvestor1 37.59
+investmentGuideReward 3.76
+sharesOfInvestor1 3759
+lockedTeamShares 17236
+lockedFundariaShares 357
+teamShares 3710
+fundariaShares 0
+totalSupply 35909
+Action completed. 1617864879
+State after:
+coinBalanceOfInvestor2 64.4268
+scoinBalanceOfInvestor2 686.94
+investedScoinByInvestor2 108.47
+investmentGuideReward 10.85
+sharesOfInvestor2 10847
+lockedTeamShares 17236
+lockedFundariaShares 357
+teamShares 3710
+fundariaShares 0
+totalSupply 35909
+Action completed. 1617864882
+Act: Prepare long finance period 1617864905
+State before:
+period 1
+longFinancePeriodPrepared false
+State after:
+period 1
+longFinancePeriodPrepared true
+Action completed. 1617864912
+---Action: setVoting for owner 1617864920
+State before:
+votingId 0
+State after:
+votingId 1
+votingStartTime 1617864920
+votingEndTime 1617865100
+Action completed. 1617864929
+---Action: Vote for owner by Investor1 1617864930
+State before:
+voteForOwnerQuorum 0
+voteForOwnerWinAddress 0x0000000000000000000000000000000000000000
+proposedValue 0xB1Df2e5cAdF41eCa5d807c73622B31Cc5fc697EF
+State after:
+voteForOwnerQuorum 10
+voteForOwnerWinAddress 0xB1Df2e5cAdF41eCa5d807c73622B31Cc5fc697EF
+Action completed. 1617864940
+---Action: Vote for owner by Investor0 1617864945
+State before:
+voteForOwnerQuorum 10
+voteForOwnerWinAddress 0xB1Df2e5cAdF41eCa5d807c73622B31Cc5fc697EF
+proposedValue 0x989Cdbb1eDCd324367067C1b6Aba4963269eF12D
+State after:
+voteForOwnerQuorum 68
+voteForOwnerWinAddress 0xB1Df2e5cAdF41eCa5d807c73622B31Cc5fc697EF
+Action completed. 1617864955
+---Action: Vote for owner by Investor2 1617865001
+State before:
+voteForOwnerQuorum 68
+voteForOwnerWinAddress 0xB1Df2e5cAdF41eCa5d807c73622B31Cc5fc697EF
+proposedValue 0x621DD25aDC6550bef3157A04C11C99827Cd24e9c
+State after:
+voteForOwnerQuorum 99
+voteForOwnerWinAddress 0x621DD25aDC6550bef3157A04C11C99827Cd24e9c
+Action completed. 1617865010
+---Action: Apply voting results for owner 1
+State before:
+votingId 1
+quorum 99
+onwer 0x621DD25aDC6550bef3157A04C11C99827Cd24e9c
+State after:
+onwer 0x621DD25aDC6550bef3157A04C11C99827Cd24e9c
+Action completed. 1617865251

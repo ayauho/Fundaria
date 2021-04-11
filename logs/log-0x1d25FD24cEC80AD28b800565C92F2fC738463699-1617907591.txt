@@ -1,0 +1,111 @@
+Task: Check how voting for right to sell shares works.
+Abstract: After applying voting result, shares of startups should be on owner account
+Sequence: Invest in startup, prepare sale, invest from Investors 1&2, set voting for right, vote by Investors, aplly voting results.
+
+Investor0 0x621DD25aDC6550bef3157A04C11C99827Cd24e9c
+Investor1 0xB1Df2e5cAdF41eCa5d807c73622B31Cc5fc697EF
+Investor2 0x989Cdbb1eDCd324367067C1b6Aba4963269eF12D
+BNB/BUSD 257.5257
+---Action: Invest in startup 1617907258
+State before:
+startupAddress 0xEEe385937283d906Ca8352aa1735c596B4e1a230
+poolScoinBalance 200.00
+fundariaStartupSharesBalance 0
+investedScoin 100
+State after:
+poolScoinBalance 100.01
+fundariaStartupSharesBalance 9960
+Action completed. 1617907277
+---Action: Prepare sale 1617907281
+saleStartTime 1617907281
+saleEndTime 1617907341
+shortFinancePeriod 60
+longFinancePeriod 600
+longFinancePeriodEndTime 1617907941
+sharePrice 0.01
+saleShare 51
+teamShare 48
+investmentGuidesRewardShare 10
+poolCap 0
+bountyCap 100000
+presaleCap 100000
+airdropCap 100000
+Action completed. 1617907298
+---Action: Investing from Investor1 1617907300
+State before:
+coinBalanceOfInvestor1 63.3151
+---Action: Investing from Investor2 1617907300
+State before:
+scoinBalanceOfInvestor1 255.69
+coinBalanceOfInvestor2 61.9621
+investedScoinByInvestor1 0.00
+scoinBalanceOfInvestor2 687.04
+investmentGuideReward 0.00
+investedScoinByInvestor2 0.00
+sharesOfInvestor1 0
+investmentGuideReward 0.00
+lockedTeamShares 0
+sharesOfInvestor2 0
+lockedFundariaShares 0
+lockedTeamShares 0
+totalSupply 0
+lockedFundariaShares 0
+totalSupply 0
+State after:
+coinBalanceOfInvestor2 61.7537
+State after:
+coinBalanceOfInvestor1 63.2083
+scoinBalanceOfInvestor2 687.04
+investedScoinByInvestor2 53.78
+investmentGuideReward 5.38
+sharesOfInvestor2 5378
+lockedTeamShares 7549
+lockedFundariaShares 0
+teamShares 0
+fundariaShares 0
+totalSupply 15571
+Action completed. 1617907326
+scoinBalanceOfInvestor1 255.70
+investedScoinByInvestor1 26.44
+investmentGuideReward 2.64
+sharesOfInvestor1 2644
+lockedTeamShares 7549
+lockedFundariaShares 0
+teamShares 0
+fundariaShares 0
+totalSupply 15571
+Action completed. 1617907327
+---Action: setVoting of right to sell shares 1617907343
+State before:
+votingId 0
+State after:
+votingId 1
+votingStartTime 1617907363
+votingEndTime 1617907523
+Action completed. 1617907353
+---Action: Vote for right to sell startup shares by Investor2 1617907430
+State before:
+voteForRightQuorum 0
+voteForRightWinAddress 0x0000000000000000000000000000000000000000
+State after:
+voteForRightQuorum 34
+voteForRightWinAddress 0xEEe385937283d906Ca8352aa1735c596B4e1a230
+Action completed. 1617907439
+---Action: Vote for right to sell startup shares by Investor1 1617907443
+State before:
+voteForRightQuorum 34
+voteForRightWinAddress 0xEEe385937283d906Ca8352aa1735c596B4e1a230
+State after:
+voteForRightQuorum 51
+voteForRightWinAddress 0xEEe385937283d906Ca8352aa1735c596B4e1a230
+Action completed. 1617907451
+---Action: Apply voting results of right to sell shares 1617907566
+State before:
+votingId 1
+quorum 51
+fundariaOwnerStartupSharesBalance: 0
+fundariaStartupSharesBalance: 9960
+State after:
+fundariaOwnerStartupSharesBalance: 9960
+fundariaStartupSharesBalance: 0
+Action completed. 1617907574
