@@ -1,5 +1,5 @@
 # Fundaria
-Live examples:
+##Live examples:
 
 https://fundaria.com/test/sc/deploy-bsc.html
 
@@ -9,7 +9,7 @@ https://fundaria.com/test/sc/complex-testing-bsc.html?pool=1
 
 
 
-Instalation:
+##Instalation:
 
 apt install apache2
 
@@ -26,7 +26,7 @@ chmod 666 /var/run/docker.sock
 service apache2 start
 
 
-Using:
+##Using:
 
 Deploy contracts:
 
@@ -39,6 +39,6 @@ complex-testing-bsc.html (Fundaria pool)
 complex-testing-bsc.html?pool=1 (a startup pool)
 
 
-/logs:
+##/logs:
 
 Every log is the sequence of actions, described on the top of log file.
