@@ -10,7 +10,6 @@ import "./ISwapRouter.sol";
         uint investmentGuideReward;
         uint investmentGuideClaimedReward;
         uint scoin;
-        uint coin;
         uint quantity;      
         uint withdrawn;
         uint toTeam;
@@ -107,9 +106,8 @@ library Helper {
         return (quantity, realScoin, scoinRemnant);
     }
 
-    function investStep2(InvestedData storage investedData, uint realScoin, uint coinRemnant, uint8 investmentGuidesRewardShare, uint8 phase, uint[] storage investmentGuideRewards) public {
+    function investStep2(InvestedData storage investedData, uint realScoin, uint8 investmentGuidesRewardShare, uint8 phase, uint[] storage investmentGuideRewards) public {
         investedData.scoin += realScoin;        
-        investedData.coin += (msg.value - coinRemnant);
         if(investedData.investmentGuide != address(0) && investmentGuidesRewardShare > 0) {
            uint investmentGuideReward = (realScoin * investmentGuidesRewardShare) / 100;
            investedData.investmentGuideReward += investmentGuideReward;
