@@ -183,7 +183,7 @@ contract Pool is ESP1 {
     function invest(address investmentGuide, bool rejectedWithdrawal) public payable needPeriod(1,false) returns(uint) {       
         require(kycApprovedOf(msg.sender), 'ES1: sender KYC not approved yet');
         (uint quantity, uint scoin, uint scoinRemnant) = Helper.investStep1(invested[msg.sender][phase], swapRouter, scoinAddress, poolCap, sharePrice, investmentGuide, rejectedWithdrawal, investedTotal, phase);        
-        Helper.investStep2(invested[msg.sender][phase], scoin, scoinRemnant, investmentGuidesRewardShare, phase, investmentGuideRewards);
+        Helper.investStep2(invested[msg.sender][phase], scoin, investmentGuidesRewardShare, phase, investmentGuideRewards);
         _totalSupply += Helper.investStep3(invested[msg.sender][phase], _balances, balancesLocked, phase, saleShare, teamShare, platformShare, quantity, _owner, address(0));
         if(scoinRemnant>0) Scoin.transfer(msg.sender,scoinRemnant);
         emit Transfer(address(0), msg.sender, quantity);
@@ -462,4 +462,3 @@ contract Pool is ESP1 {
         kycApproveDelegated[to] = false;    
     }    
 }
-
