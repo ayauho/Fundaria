@@ -127,7 +127,8 @@ contract Pool is ES1 {
     event PrepareSale(uint8 _phase, uint _poolCap, uint _saleStartTime, uint _saleEndTime, uint32 _shortFinancePeriod, uint32 _longFinancePeriod, uint _sharePrice, uint8 _saleShare, uint8 _teamShare, uint8 _platformShare, uint8 _investmentGuidesRewardShare, uint _bountyCap, uint _presaleCap,  uint256 time);
     function prepareSale(uint _poolCap, uint _saleStartTime, uint _saleEndTime, uint32 _shortFinancePeriod, uint32 _longFinancePeriod, uint _sharePrice, uint8 _saleShare, uint8 _teamShare, uint8 _platformShare, uint8 _investmentGuidesRewardShare, uint _bountyCap, uint _presaleCap, uint _airdropCap) public onlyOwner {
         require(_platformShare>0);
-        require(setPeriod()==0, 'Only available before sale start time');                     
+        require(setPeriod()==0, 'Only available before sale start time');
+        require(_saleEndTime > block.timestamp);                     
         if(block.timestamp > longFinancePeriodEndTime && longFinancePeriodEndTime > 0) {
             transactedIn[phase+1] += investmentGuideRewards[phase];
             transactedIn[phase+1] += available(block.timestamp);
@@ -179,7 +180,7 @@ contract Pool is ES1 {
     function invest(address investmentGuide, bool rejectedWithdrawal) public payable needPeriod(1,false) returns(uint) {       
         require(platform.kycApprovedOf(msg.sender), 'ES1: sender KYC not approved yet'); 
         (uint quantity, uint scoin, uint scoinRemnant) = Helper.investStep1(invested[msg.sender][phase], swapRouter, scoinAddress, poolCap, sharePrice, investmentGuide, rejectedWithdrawal, investedTotal, phase);
-        Helper.investStep2(invested[msg.sender][phase], scoin, scoinRemnant, investmentGuidesRewardShare, phase, investmentGuideRewards);
+        Helper.investStep2(invested[msg.sender][phase], scoin, investmentGuidesRewardShare, phase, investmentGuideRewards);
         _totalSupply += Helper.investStep3(invested[msg.sender][phase], _balances, balancesLocked, phase, saleShare, teamShare, platformShare, quantity, _owner, platformAddress);
         if(scoinRemnant>0) Scoin.transfer(msg.sender,scoinRemnant);
         emit Transfer(address(0), msg.sender, quantity);
