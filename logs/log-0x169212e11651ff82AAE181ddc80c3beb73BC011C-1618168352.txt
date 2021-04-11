@@ -1,0 +1,45 @@
+Task: Check pool cap
+Abstract: Send more investments then contract can accept
+Sequence: Invest amount > poolCap (100.00)
+
+Investor0 0x621DD25aDC6550bef3157A04C11C99827Cd24e9c
+Investor1 0xB1Df2e5cAdF41eCa5d807c73622B31Cc5fc697EF
+Investor2 0x989Cdbb1eDCd324367067C1b6Aba4963269eF12D
+BNB/BUSD 101.2597
+---Action: Prepare sale 1618168270
+saleStartTime 1618168270
+saleEndTime 1618168450
+shortFinancePeriod 60
+longFinancePeriod 600
+longFinancePeriodEndTime 1618169050
+sharePrice 0.01
+saleShare 51
+teamShare 48
+investmentGuidesRewardShare 10
+poolCap 100.00
+bountyCap 100000
+presaleCap 100000
+airdropCap 100000
+Action completed. 1618168289
+---Action: Investing from Investor1 1618168291
+State before:
+coinBalanceOfInvestor1 75.5804
+scoinBalanceOfInvestor1 274.54
+investedScoinByInvestor1 0.00
+investmentGuideReward 0.00
+sharesOfInvestor1 0
+lockedTeamShares 0
+lockedFundariaShares 0
+totalSupply 0
+State after:
+coinBalanceOfInvestor1 74.3713
+scoinBalanceOfInvestor1 295.25
+investedScoinByInvestor1 100.00
+investmentGuideReward 10.00
+sharesOfInvestor1 10000
+lockedTeamShares 9411
+lockedFundariaShares 196
+teamShares 0
+fundariaShares 0
+totalSupply 19607
+Action completed. 1618168317
