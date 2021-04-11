@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Testing Fundaria Contract</title>
+   <style>
+    body * {display:block;}
+    pool,invests{margin:10px;padding:10px;border:1px solid grey;}
+    cap{font-weight:bold;font-size:25px;}
+    cap.pool{margin-right:10px;}
+    elements, element{display:flex;line-height:25px;}
+    element{margin-right:10px;}
+    .locked{color:red;}
+    invest{border:1px solid lightgrey;display:flex;padding:5px;flex-direction:column;}
+    invests tit, cntr tit{margin-left:10px;}
+    invests tit:first-child{margin-left:0;}
+    cntr{display:flex;margin:10px;}
+    cntr.set-votings{flex-direction:column;}
+    buttons{display:flex;}
+    input[type=text]{width:30px;}
+    .margin-left{margin-left:10px;}
+    .margin-top{margin-top:10px;}
+    names{margin:10px;}
+    names, names *{display:flex;flex-wrap:wrap;}
+    names name{margin:5px;}
+    capi{display:flex;}
+    capi c{font-weight:bold;}
+    .lightgrey-bg{background:#EEE}
+    .wrap{flex-wrap:wrap;}
+   </style> 
+<script src="https://cdn.jsdelivr.net/npm/web3@1.2.6/dist/web3.min.js"></script>
+<script src="/test/js/src/Helper-src.js?<?=time()?>"></script>
+<script>
+window.COIN='BNB'
+window.SCOIN='BUSD'
+class Testing extends HelperSrc {
+    constructor(){
+        super()
+        window._=this        
+        ;(async ()=>{
+            await _.init()
+            await _.framework()
+            await _.cycle()
+            await _.renewPrepareSaleOutput()
+            //let it = _.toScoin(await _.Pool.methods.investedTotal(_.phase).call())
+            //let ti = _.toScoin(await _.Pool.methods.transactedIn(_.phase).call())
+            //let to = _.toScoin(await _.Pool.methods.transactedOut(_.phase).call())
+            //let r = _.toScoin(await _.Pool.methods.rejectedInvestmentWithdrawals(_.phase).call())
+            //let igr = _.toScoin(await _.Pool.methods.investmentGuideRewards(_.phase).call())
+            //log(it, ti,to,r,igr)
+            //log('transactedOut',to)
+            //log(await _.Pool.methods.income(_.phase).call())
+            //log('investmentGuideRewardAvailable', _.toScoin(await _.Pool.methods.investmentGuideRewardAvailable(_.now,_.owner,_.phase).call() ))
+            //log('dividendingIncome', _.toScoin(await _.Pool.methods.dividendingIncome().call() ))
+            //log('allowance', _.toScoin(await _.SCOIN.methods.allowance(_.fundariaAddress,_.swapRouterAddress).call() ))
+        })()
+        //_.buildButtons()
+    }
+    async init(){
+        let _=this
+        if(gets.pool)_.isPool=true
+        _.names = [COIN+' balance',SCOIN+' balance','Shares balance','Invested on phase','Investment guide on phase','Investment guide reward total now','Ig claimed reward','Ig reward available','Dividends to receive']
+        _.address0='0x0000000000000000000000000000000000000000'
+        _.gas=6000000
+        _.acs=[]
+        _.web3 = new Web3('https://data-seed-prebsc-1-s1.binance.org:8545')
+        _.gasPrice = parseInt(parseInt(await _.web3.eth.getGasPrice())*2).toString()               
+        _.pks=['0x5f82d303c3ab402c0af006b64642e187aae75e9cc545f850ad4012551856fada','0x137d4604818cf479eeae3c8de874b3a979ec5cb1138ee786a19079a25fe66c25','0x740f6faee5309f68a56b6a75dfcb9e4b257bfb43b867dd2e2745314b2ab90889']
+        _.owner = _.acs[0]
+        _.web3.eth.defaultAccount = _.owner                       
+        _.poolAddress = localStorage.poolAddress
+        _.scoinAddress = localStorage.scoinAddress
+        _.swapRouterAddress = localStorage.swapRouterAddress
+        _.fundariaAddress = localStorage.fundariaAddress
+        //l(_.scoinAddress, _.swapRouterAddress, _.fundariaAddress, _.poolAddress)
+        _.abi = await _.ax({m:'GET',p:'output/Pool/Pool.abi'})
+        _.pool = new _.web3.eth.Contract(_.abi, _.poolAddress)        
+        _.fAbi = await _.ax({m:'GET',p:'output/Fundaria/Pool.abi'})
+        _.fundaria = new _.web3.eth.Contract(_.fAbi, _.fundariaAddress)
+        if(_.isPool){
+            _.Pool=_.pool
+            _.PoolAddress=_.poolAddress
+        }else{
+            _.Pool=_.fundaria
+            _.PoolAddress=_.fundariaAddress            
+        }
+        _.logId=_.PoolAddress                
+        _.pks.ech((pk,i)=> {            
+            let ac = _.web3.eth.accounts.privateKeyToAccount(pk)
+            l('Investor'+i,ac.address)
+            _.acs.push(ac.address)
+            _.web3.eth.accounts.wallet.add(pk)
+        })        
+        _.scoinAbi = await _.ax({m:'GET',p:'output/BUSDTestnet/BUSD.abi'})
+        _.SCOIN = new _.web3.eth.Contract(_.scoinAbi, _.scoinAddress)
+        _.owner = await _.Pool.methods.owner().call()
+        _.web3.eth.Contract.defaultAccount=_.owner
+        _.phase=1
+        _.scoinCourse = _.toCoin(await _.coinToScoin(_.toWei(1)))
+        
+        _.$dividendsToReceive=[]
+        _.$investmentGuidesRewards=[] 
+        _.$invests=[]        
+
+        _.psDefs = {'Pool cap':'poolCap','Share price':'sharePrice','Sale share':'saleShare','Team share':'teamShare','Investment guide reward share':'investmentGuidesRewardShare',
+            'Bounty cap':'bountyCap','Presale cap':'presaleCap','Airdrop cap':'airdropCap',
+            'Sale start time':'saleStartTime','Sale end time':'saleEndTime','Business period end time':'longFinancePeriodEndTime',
+            'Short finance period':'shortFinancePeriod','Long finance period':'longFinancePeriod'}
+        
+        l(COIN+'/'+SCOIN, _.scoinCourse)
+        //l(await _.Pool.methods.dividendsToReceive(_.address0).call())                        
+    }
+    framework(){
+        let $es, $e
+        _.$test=_.$('test')
+        _.$pool =  _.$('+pool').to(_.$test)
+        
+        $es=_.$('+elements').to(_.$pool)
+        _.$('+cap').acl('pool').html('Pool').to($es)
+        
+        let poolDefs1 = {'Phase':'phase','Period':'period','Short finance period num now':'sfPeriod','Locked team shares':'lockedTeamShares','Locked fundaria shares':'lockedFundariaShares','Team shares':'teamShares','Fundaria shares':'fundariaShares'}
+        
+        poolDefs1.ech((val,nm)=>{
+          $e=_.$('+element').to($es)
+          _.$('+tit').html(nm+':').to($e)
+          _['$'+val]=_.$('+'+val).html(0).to($e)        
+        })
+
+        $es=_.$('+elements').to(_.$pool)        
+
+        let poolDefs2 = {['Pool '+SCOIN+' balance']:'poolScoinBalance','Total supply':'totalSupply','Withdrawn':'withdrawn','Claimed IG reward':'claimed','Invested':'invested','Income':'income','Available':'available'} 
+        
+        poolDefs2.ech((val,nm,i)=>{
+          $e=_.$('+element').to($es)
+          _.$('+tit').html(nm+':').to($e)
+          _['$'+val]=_.$('+'+val).html(0).to($e) 
+          if(i>1) _.$('+sym').html('&nbsp;'+SCOIN).to($e)             
+        })
+        
+        _.$available.onclick=e=>{
+            l('---Action: check',_.nowTS)
+            l('nowShortFinancePeriodNum',_.sfPeriod)
+            l('available', _.$available.html())                                                 
+            l('poolScoinBalance', _.$poolScoinBalance.html())
+            l('Action completed.',_.nowTS)
+        }
+        
+        $es=_.$('+elements').acl('lightgrey-bg').acl('wrap').to(_.$pool)
+        _.psDefs.ech( (val,nm)=>{
+          $e=_.$('+element').to($es)
+          _.$('+tit').html(nm+':').to($e)
+          _['$'+val]=_.$('+'+val).html(0).to($e)            
+        }) 
+
+        let $names=_.$('+names').to(_.$test)
+        _.names.ech((name,i)=>{
+            i++
+            _.$('+name').html(`<b>${i}:</b> ${name}`).to($names)
+        })
+        _.$('+invests').to(_.$test)       
+        for(let i=0;i<_.acs.length;i++) _.$invest(_.acs[i],i)        
+        _.$prepareSale()
+        _.$prepareLongFinancePeriod()
+        _.$setVotings()        
+        _.$adp = _.$('+button').acl('margin-left').html('Allow dividends payment').to(_.$test)
+        _.$('+button').acl('margin-left').acl('margin-top').html(_.isPool?'Unlock team and fundaria shares':'Unlock team shares').to(_.$test).onclick=async e=>{
+            if(_.isPool)l('---Action: Unlock team and fundaria shares',_.nowTS)
+            else l('---Action: Unlock team shares',_.nowTS) 
+            l('State before:')
+            l('lockedTeamShares',await _.Pool.methods.balancesLocked(_.phase,_.owner).call())
+            l('lockedFundariaShares',await _.Pool.methods.balancesLocked(_.phase,_.fundariaAddress).call())
+            l('teamShares',await _.Pool.methods.balanceOf(_.owner).call())
+            l('fundariaShares',await _.Pool.methods.balanceOf(_.fundariaAddress).call())
+            l('nowShortFinancePeriodNum', await _.Pool.methods.nowShortFinancePeriodNum(_.now).call())                    
+            if(_.isPool)await _.Pool.methods.unlockTeamAndPlatformShares().send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
+            else await _.Pool.methods.unlockTeamShares().send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
+            await _.renewPoolOutput()
+            l('nowShortFinancePeriodNum', _.$sfPeriod.html())
+            l('State after:')
+            l('lockedTeamShares',_.$lockedTeamShares.html())
+            l('lockedFundariaShares',_.$lockedFundariaShares.html())
+            l('teamShares',_.$teamShares.html())
+            l('fundariaShares',_.$fundariaShares.html())
+            l('Action completed.',_.nowTS)                
+        }        
+        _.$adp.onclick = async e=>{
+            l('---Action: Allowing dividends payment',_.nowTS)
+            l('State before:')
+            l('dividendingIncome', _.toScoin(await _.Pool.methods.dividendingIncome().call())) 
+            await _.Pool.methods.allowDividendsPayment(_.nowTS+180).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
+            for(let i=0;i<_.acs.length;i++) _.$invests[i].dtr.html( _.toScoin(await  _.Pool.methods.dividendsToReceive(_.acs[i]).call()))
+            await _.renewPoolOutput()
+            l('State after:')
+            l('dividendingIncome', _.toScoin(await _.Pool.methods.dividendingIncome().call()))
+            l('dividendsPaymentPeriodEndTime', _.toDate(await _.Pool.methods.dividendsPaymentPeriodEndTime().call()) )
+            l('Action completed.',_.nowTS)           
+        }        
+        if(!_.isPool)_.$investInStartup()
+        _.$save()
+    }
+    get $chooseAddress(){
+        let $select=_.$('+select')
+        for(let i=0;i<_.acs.length;i++) {
+            _.$('+option').attr('id',_.acs[i]).html('Investor '+i).to($select)
+        }
+        return $select
+    }
+    investorFromAddr(addr,num=false){
+        if(addr==_.fundariaAddress) return 'Fundaria'
+        for(let i=0;i<_.acs.length;i++){
+            if(_.acs[i]==addr) return num? i: 'Investor'+i
+        }
+        return '-'
+    }
+    toWei(eth){
+        return _.web3.utils.toWei(eth.toString(),'ether')
+    }
+    toCoin(wei){
+        return parseFloat(_.web3.utils.fromWei(wei.toString(),'ether')).toFixed(4)
+    }
+    toScoin(wei){
+        return parseFloat(_.web3.utils.fromWei(wei.toString(),'ether')).toFixed(2)
+    }         
+    async coinToScoin(wei){        
+        let out = await _.Pool.methods.coinToScoin(wei).call()
+        return out[1]    
+    }    
+    async coinBalance(from){
+        return parseFloat(await _.web3.utils.fromWei(await _.web3.eth.getBalance(from),'ether')).toFixed(4)    
+    }
+    get now(){return parseInt((+new Date())/1000)}
+    async scoinBalance(from){
+        return await _.toScoin(await _.SCOIN.methods.balanceOf(from).call())    
+    }    
+    toDate(ts){return Math.round(new Date(ts)/1000)}
+    get nowTS(){return Math.round(new Date()/1000)}
+    async $invest(addr,n){
+        let $inv={addr}
+        let $i, $cap, $es, $w, $r, $e, $b,$am,$vo,$vd,$am2,$ti,$am3,$to,$am4,$dto,$am5,$un,$ownerPropo,$delegateTo,$igrant,capi
+        $i=_.$('+invest').to(_.$('invests'))                
+        $es=_.$('+elements').to($i)
+        capi='<c>Investor'+n
+        if(!n)capi+=' (owner) '
+        capi+='</c>&nbsp;'
+        capi+=addr
+        $cap = _.$('+capi').html(capi).to($es)
+        $es=_.$('+elements').to($i) 
+        $inv.invest=_.$('+button').html('invest').to($es)
+        $inv.investF=_.$({type:'text',placeholder:'eth',value:0.1},'input').to($es)
+        $inv.withdraw=_.$('+button').html('withdraw').to($es)
+        $inv.reject=_.$('+button').html('reject').to($es)
+        $inv.vo=_.$('+button').html('vote owner').to($es)
+        $inv.ownerPropo=_.$chooseAddress.to($es)
+        $inv.vd=_.$('+button').html('vote dividends').to($es)
+        $inv.divPropo=_.$({type:'text',placeholder:'%',value:50},'input').to($es)        
+        $inv.vr=_.$('+button').html('vote right').to($es)
+        //$inv.rightPropo=_.$chooseAddress.to($es)                
+        $inv.ti=_.$('+button').html('transact in').to($es)        
+        $inv.to=_.$('+button').html('transact out').to($es)
+        $inv.tf=_.$({type:'text',placeholder:SCOIN,value:n?0.1:100},'input').to($es)
+        $inv.dto=_.$('+button').html('delegate to').to($es)
+        $inv.delegateTo=_.$chooseAddress.to($es)
+        $inv.dtof=_.$({type:'text',placeholder:SCOIN,value:30},'input').to($es)
+        $inv.un=_.$('+button').html('undelegate').to($es)
+        $inv.rd=_.$('+button').html('Receive dividends').to($es)
+        $inv.cigr=_.$('+button').html('Claim ig reward').to($es)        
+
+        $es=_.$('+elements').to($i) 
+        
+        let defs = ['coin','scoin','sb','iop','igop','igrop','igcrop','igrant','dtr']
+        
+        defs.ech((nm,i)=>{
+          _.$('+tit').html('<b>'+(i+1)+':</b>').to($es)
+          $inv[nm]=_.$('+'+nm).html(0).to($es)             
+        })
+
+        let renewInvestorOutput = async addr => {
+            let $inv = _.$invests[_.investorFromAddr(addr,true)]
+            log('Renew output of '+ _.investorFromAddr(addr))
+            let coinBalance = await _.coinBalance(addr)
+            let scoinBalance = await _.scoinBalance(addr)
+            let sharesBalance = await _.Pool.methods.balanceOf(addr).call()
+            let investedScoin = _.toScoin((await _.Pool.methods.invested(addr,_.phase).call()).scoin)
+            let investmentGuideOfPhase = (await _.Pool.methods.invested(addr,_.phase).call()).investmentGuide            
+            let investmentGuideRewardOfPhase = _.toScoin(await _.invested(addr,'investmentGuideReward'))
+            let investmentGuideClaimedRewardOfPhase = _.toScoin((await _.Pool.methods.invested(addr,_.phase).call()).investmentGuideClaimedReward)
+            let investmentGuideRewardAvailable = _.toScoin(await _.Pool.methods.investmentGuideRewardAvailable(_.now,addr,_.phase).call())
+            let dividendsToReceive = _.toScoin(await  _.Pool.methods.dividendsToReceive(addr).call())            
+            $inv.coin.html(coinBalance)
+            $inv.scoin.html(scoinBalance)
+            $inv.sb.html(sharesBalance)
+            $inv.iop.html(investedScoin)
+            $inv.igop.html(_.investorFromAddr(investmentGuideOfPhase))
+            $inv.igrop.html(investmentGuideRewardOfPhase)
+            $inv.igcrop.html(investmentGuideClaimedRewardOfPhase)
+            $inv.igrant.html(investmentGuideRewardAvailable)
+            $inv.dtr.html(dividendsToReceive)                     
+        }
+        
+        $inv.renewInvestorOutput=renewInvestorOutput
+        
+        var investor = _.investorFromAddr(addr)
+                
+        let logInvBefore = async addr=>{
+            l('coinBalanceOf'+investor, await _.coinBalance(addr))
+            l('scoinBalanceOf'+investor, await _.scoinBalance(addr))
+            //l('poolCoinBalance',await _.coinBalance(_.PoolAddress))            
+            l('investedScoinBy'+investor, _.toScoin((await _.Pool.methods.invested(addr,_.phase).call()).scoin))
+            l('investmentGuideReward', _.toScoin(await _.invested(addr,'investmentGuideReward')))
+            l('sharesOf'+investor, await _.Pool.methods.balanceOf(addr).call())
+            l('lockedTeamShares',await _.Pool.methods.balancesLocked(_.phase,_.owner).call())
+            l('lockedFundariaShares',await _.Pool.methods.balancesLocked(_.phase,_.fundariaAddress).call())            
+            l('totalSupply',await _.Pool.methods.totalSupply().call())            
+        }
+        
+        let logInvAfter = async ()=>{
+            l('coinBalanceOf'+investor, $inv.coin.html())
+            l('scoinBalanceOf'+investor, await _.scoinBalance(addr))
+            //l('poolCoinBalance', _.$poolCoinBalance.html())
+            l('investedScoinBy'+investor, $inv.iop.html())
+            l('investmentGuideReward', $inv.igrop.html())
+            l('sharesOf'+investor, $inv.sb.html())
+            l('lockedTeamShares',_.$lockedTeamShares.html())
+            l('lockedFundariaShares',_.$lockedFundariaShares.html())
+            l('teamShares',_.$teamShares.html())
+            l('fundariaShares',_.$fundariaShares.html())                        
+            l('totalSupply',_.$totalSupply.html())        
+        }
+        
+        $inv.invest.onclick = async e=>{
+            let next=n+1
+            let ig=_.acs[next]
+            if(next==_.acs.length)ig=_.fundariaAddress
+            l('---Action: Investing from '+investor,_.nowTS)
+            l('State before:')            
+            await logInvBefore(addr)            
+            let wei=_.toWei($inv.investF.value)
+            await _.Pool.methods.invest(ig,false).send({from:addr,value:wei,gas:_.gas,gasPrice:_.gasPrice})
+            await renewInvestorOutput(addr)
+            await _.renewPoolOutput()
+            l('State after:')
+            await logInvAfter(addr)
+            l('Action completed.',_.nowTS)                                                
+        }
+        $inv.withdraw.onclick = async e=>{
+            l('---Action: Withdrawing investment of '+investor,_.nowTS)
+            l('State before:')
+            l('nowShortFinancePeriodNum', await _.Pool.methods.nowShortFinancePeriodNum(_.now).call())           
+            await logInvBefore(addr)
+            await _.Pool.methods.withdrawInvestment().send({from:addr,gas:_.gas,gasPrice:_.gasPrice})            
+            await renewInvestorOutput(addr)
+            await _.renewPoolOutput() 
+            l('State after:')
+            l('nowShortFinancePeriodNum', _.$sfPeriod.html())
+            await logInvAfter(addr)
+            l('Action completed.',_.nowTS)                               
+        }
+        $inv.reject.onclick = async e=>{
+            l('---Action: Reject investment withdrawal of '+investor,_.nowTS)
+            l('State before:')
+            l('rejectedInvestmentWithdrawals', _.toScoin(await _.Pool.methods.rejectedInvestmentWithdrawals(_.phase).call()))
+            l('nowShortFinancePeriodNum', await _.Pool.methods.nowShortFinancePeriodNum(_.now).call())
+            l('available', _.toScoin(await _.Pool.methods.available(_.now).call()))
+            await _.Pool.methods.rejectInvestmentWithdrawal().send({from:addr,gas:_.gas,gasPrice:_.gasPrice})
+            await renewInvestorOutput(addr)
+            await _.renewPoolOutput()
+            l('State after:')
+            l('rejectedInvestmentWithdrawals', _.toScoin(await _.Pool.methods.rejectedInvestmentWithdrawals(_.phase).call()))
+            l('nowShortFinancePeriodNum', await _.Pool.methods.nowShortFinancePeriodNum(_.now).call())
+            l('available', _.$available.html()) 
+            l('Action completed.',_.nowTS)           
+        }
+        $inv.vo.onclick = async e=>{
+            if(!_.ownerLastVotingId) _.ownerLastVotingId = await _.Pool.methods.votingId().call()
+            l('---Action: Vote for owner by '+investor,_.nowTS)
+            l('State before:')
+            l('voteForOwnerQuorum', await _.Pool.methods.votingQuorum(_.ownerLastVotingId).call())
+            l('voteForOwnerWinAddress', await _.Pool.methods.addressPropositionMaxCount(_.ownerLastVotingId).call())
+            let ownerPropo = $inv.ownerPropo.options[$inv.ownerPropo.selectedIndex].id           
+            l('proposedValue',ownerPropo) 
+            await _.Pool.methods.vote(_.ownerLastVotingId,ownerPropo,0).send({from:addr,gas:_.gas,gasPrice:_.gasPrice})
+            let winAddress=await _.Pool.methods.addressPropositionMaxCount(_.ownerLastVotingId).call()            
+            l('State after:')
+            l('voteForOwnerQuorum', await _.Pool.methods.votingQuorum(_.ownerLastVotingId).call())
+            l('voteForOwnerWinAddress', winAddress)           
+            _.$ownerQ.html(await _.Pool.methods.votingQuorum(_.ownerLastVotingId).call())
+            _.$ownerWinAddr.html(winAddress)
+            l('Action completed.',_.nowTS)
+        }
+        $inv.vd.onclick = async e=>{
+            if(!_.dividendsLastVotingId) _.dividendsLastVotingId = await _.Pool.methods.votingId().call() 
+            let divPropo = $inv.divPropo.value
+            l('---Action: Vote for dividends share in income by '+investor,_.nowTS)
+            l('State before:')
+            l('voteForDividendsQuorum', await _.Pool.methods.votingQuorum(_.dividendsLastVotingId).call())
+            l('voteForDividendsWinUint', await _.Pool.methods.uintWinProposition(_.dividendsLastVotingId).call())
+            l('proposedValue',divPropo)            
+            //l('uintCount',(await _.Pool.methods.votings(_.dividendsLastVotingId).call()).uintCount)
+            //return
+                        
+            await _.Pool.methods.vote(_.dividendsLastVotingId,_.address0,divPropo).send({from:addr,gas:_.gas,gasPrice:_.gasPrice})
+            let uintWinProposition = await _.Pool.methods.uintWinProposition(_.dividendsLastVotingId).call()
+            l('State after:')
+            l('voteForDividendsQuorum', await _.Pool.methods.votingQuorum(_.dividendsLastVotingId).call())
+            l('voteForDividendsWinUint', uintWinProposition)  
+            _.$dividendsQ.html( await _.Pool.methods.votingQuorum(_.dividendsLastVotingId).call() )
+            _.$dividendsWinUint.html( uintWinProposition )
+            l('Action completed.',_.nowTS)           
+        }
+        $inv.vr.onclick = async e=>{
+            if(!_.rightLastVotingId) _.rightLastVotingId = await _.Pool.methods.votingId().call()
+            l('---Action: Vote for right to sell startup shares by '+investor,_.nowTS)
+            l('State before:')
+            l('voteForRightQuorum', await _.Pool.methods.votingQuorum(_.rightLastVotingId).call())
+            l('voteForRightWinAddress', await _.Pool.methods.addressPropositionMaxCount(_.rightLastVotingId).call())
+            let rightPropo = _.poolAddress           
+            await _.Pool.methods.vote(_.rightLastVotingId,rightPropo,0).send({from:addr,gas:_.gas,gasPrice:_.gasPrice})
+            let winAddress=await _.Pool.methods.addressPropositionMaxCount(_.rightLastVotingId).call()            
+            l('State after:')
+            l('voteForRightQuorum', await _.Pool.methods.votingQuorum(_.rightLastVotingId).call())
+            l('voteForRightWinAddress', winAddress)          
+            _.$rightQ.html(await _.Pool.methods.votingQuorum(_.rightLastVotingId).call())
+            _.$rightWinAddr.html(winAddress)
+            l('Action completed.',_.nowTS)
+        }        
+        $inv.ti.onclick = async e=>{
+            _.transactIn(addr,$inv.tf.value)
+        }
+        $inv.to.onclick = async e=>{
+            _.transactOut(addr,$inv.tf.value,_.acs[n+1==_.acs.length?0:n+1])
+        }
+        $inv.dto.onclick = async e=>{
+            let index = $inv.delegateTo.selectedIndex                                    
+            let delegateTo = $inv.delegateTo.options[index].id
+            let toInvestor = _.investorFromAddr(delegateTo)
+            let amount = $inv.dtof.value
+            l('---Action: Delegated by '+investor+' to '+toInvestor+' amount '+amount,_.nowTS)
+            l('State before:')
+            l('delegatedTransactOut', _.toScoin(await _.Pool.methods.delegatedTransactOut(addr,delegateTo).call()))
+            l('delegatedTransactOutTotal', _.toScoin(await _.Pool.methods.delegatedTransactOutTotal(delegateTo).call()))
+            await _.Pool.methods.delegateTransactOut(delegateTo,_.toWei(amount)).send({from:addr,gas:_.gas,gasPrice:_.gasPrice})
+            l('State after:')
+            l('delegatedTransactOut', _.toScoin(await _.Pool.methods.delegatedTransactOut(addr,delegateTo).call()))
+            l('delegatedTransactOutTotal', _.toScoin(await _.Pool.methods.delegatedTransactOutTotal(delegateTo).call()))
+            l('Action completed.',_.nowTS)            
+        }
+        $inv.un.onclick = async e=>{
+            let index = $inv.delegateTo.selectedIndex                                    
+            let undelegateTo = $inv.delegateTo.options[index].id
+            let toInvestor = _.investorFromAddr(undelegateTo)
+            let amount = $inv.dtof.value
+            l('---Action: Undelegated by '+investor+' to '+toInvestor+' amount '+amount,_.nowTS)
+            l('State before:')
+            l('delegatedTransactOut', _.toScoin(await _.Pool.methods.delegatedTransactOut(addr,undelegateTo).call()))
+            l('delegatedTransactOutTotal', _.toScoin(await _.Pool.methods.delegatedTransactOutTotal(undelegateTo).call()))            
+            await _.Pool.methods.undelegateTransactOut(undelegateTo).send({from:addr,gas:_.gas,gasPrice:_.gasPrice})
+            l('State after:')
+            l('delegatedTransactOut', _.toScoin(await _.Pool.methods.delegatedTransactOut(addr,undelegateTo).call()))
+            l('delegatedTransactOutTotal', _.toScoin(await _.Pool.methods.delegatedTransactOutTotal(undelegateTo).call()))
+            l('Action completed.',_.nowTS)                 
+        }
+        $inv.rd.onclick = async e=>{            
+            l('---Action: Receive dividends to '+investor,_.nowTS)
+            l('State before:')
+            l('scoinBalanceOf'+investor, await _.scoinBalance(addr))
+            l('poolScoinBalance', _.$poolScoinBalance.html())             
+            l('dividendsToReceive',_.toScoin(await  _.Pool.methods.dividendsToReceive(addr).call()))
+            l('_balancesLockedTill', await _.Pool.methods.balanceLockedTillOf(addr).call())
+            l('investorReceivedDividends of '+investor, _.toScoin( await _.Pool.methods.investorReceivedDividends(addr).call() )) 
+            l('dividendsPaymentPeriodEndTime', await _.Pool.methods.dividendsPaymentPeriodEndTime().call())           
+            await _.Pool.methods.receiveDividends().send({from:addr,gas:_.gas,gasPrice:_.gasPrice})
+            await _.renewPoolOutput()
+            await renewInvestorOutput(addr)
+            l('State after:')
+            l('scoinBalanceOf'+investor, await _.scoinBalance(addr))
+            l('poolScoinBalance', _.$poolScoinBalance.html())             
+            l('dividendsToReceive',_.toScoin(await  _.Pool.methods.dividendsToReceive(addr).call()))
+            l('_balancesLockedTill', await _.Pool.methods.balanceLockedTillOf(addr).call())
+            l('investorReceivedDividends of '+investor, _.toScoin( await _.Pool.methods.investorReceivedDividends(addr).call() ))                         
+            l('Action completed.',_.nowTS)
+        }
+        $inv.cigr.onclick = async e=>{        
+            let ig=_.acs[n+1==_.acs.length?0:n+1]
+            let igInvestor =  _.investorFromAddr(ig)
+            l('---Action: Claim investment guide reward by '+igInvestor,_.nowTS)    
+            l('State before:')
+            l('poolScoinBalance', _.$poolScoinBalance.html())
+            l('scoinBalanceOf'+igInvestor, await _.scoinBalance(ig))
+            l('investmentGuideClaimedReward', _.toScoin(await _.invested(addr,'investmentGuideClaimedReward')))
+            l('investmentGuideRewardAvailable',_.toScoin(await  _.Pool.methods.investmentGuideRewardAvailable(_.now,addr,_.phase).call()))
+            l('claimedInvestmentGuideTotal', _.toScoin(await _.Pool.methods.claimedIGRTotal(_.phase).call()))                                                               
+            await _.Pool.methods.claimInvestmentGuideReward(addr).send({from:ig,gas:_.gas,gasPrice:_.gasPrice})                                              
+            await _.renewPoolOutput()
+            await renewInvestorOutput(addr)
+            l('State after:')
+            l('poolScoinBalance', _.$poolScoinBalance.html())            
+            l('scoinBalanceOf'+igInvestor, await _.scoinBalance(ig))
+            l('investmentGuideClaimedReward', _.toScoin(await _.invested(addr,'investmentGuideClaimedReward')))
+            l('investmentGuideRewardAvailable',_.toScoin(await  _.Pool.methods.investmentGuideRewardAvailable(_.now,addr,_.phase).call()))
+            l('claimedInvestmentGuideTotal', _.$claimed.html())
+            l('Action completed.',_.nowTS)              
+        }              
+        _.$invests.push($inv)
+        await renewInvestorOutput(addr)
+        await _.renewPoolOutput()                                                               
+    }
+    async cycle(){
+        _.lastPeriod=_.period
+        _.period = await _.Pool.methods.period().call()
+        _.lastSfPeriod=_.sfPeriod
+        _.sfPeriod = await _.Pool.methods.nowShortFinancePeriodNum(_.now).call()
+        if(_.lastSfPeriod!=_.sfPeriod){
+            
+        }
+        if(_.period!=_.lastPeriod || _.lastSfPeriod!=_.sfPeriod) await _.renewPoolOutput()        
+        setTimeout(()=>_.cycle(),10000)         
+    }
+    async invested(investor,what){
+        return (await _.Pool.methods.invested(investor,_.phase).call())[what]
+    }
+    async renewPoolOutput(){
+        _.$period.html(await _.Pool.methods.period().call())
+        _.$phase.html(_.phase = await _.Pool.methods.phase().call())
+        _.$invested.html(_.toScoin(await _.Pool.methods.investedTotal(_.phase).call()))
+        _.$withdrawn.html(_.toScoin(await _.Pool.methods.withdrawnTotal(_.phase).call()))
+        _.$claimed.html( _.toScoin(await _.Pool.methods.claimedIGRTotal(_.phase).call()) )
+        _.$sfPeriod.html(await _.Pool.methods.nowShortFinancePeriodNum(_.now).call())
+        _.$lockedTeamShares.html(await _.Pool.methods.balancesLocked(_.phase,_.owner).call())
+        _.$lockedFundariaShares.html(await _.Pool.methods.balancesLocked(_.phase,_.fundariaAddress).call())
+        _.$teamShares.html(await _.Pool.methods.balanceOf(_.owner).call())
+        _.$fundariaShares.html(await _.Pool.methods.balanceOf(_.fundariaAddress).call())        
+        _.$totalSupply.html(await _.Pool.methods.totalSupply().call())
+        _.$poolScoinBalance.html(await _.scoinBalance(_.PoolAddress))
+        //_.$poolCoinBalance.html(await _.coinBalance(_.PoolAddress))
+        _.$income.html(_.toScoin(await _.Pool.methods.income(_.phase).call()))
+        _.$available.html(_.toScoin(await _.Pool.methods.available(_.now).call()))
+        for(let i=0;i<_.acs.length;i++) _.$invests[i].igrant.html( _.toScoin(await  _.Pool.methods.investmentGuideRewardAvailable(_.now,_.acs[i],_.phase).call()))       
+    }
+    async renewPrepareSaleOutput(){
+        let oput
+        _.psDefs.ech(async (val,nm)=>{
+            oput=await _.Pool.methods[val]().call()
+            if(/Time/.test(val)) oput = new Date(+oput*1000)
+            if(val=='sharePrice') oput=_.toScoin(oput)
+            _['$'+val].html(oput)
+        })
+    }
+    async approveKyc(to){
+        l('---Action: Approve KYC',_.nowTS)
+        l('State before:')
+        l('to', _.investorFromAddr(to))                                
+        l('kycApprovedOf', await _.Pool.methods.kycApprovedOf(to).call())
+        await _.Pool.methods.approveKyc(to).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
+        l('State after:')
+        l('kycApprovedOf', await _.Pool.methods.kycApprovedOf(to).call())
+        l('Action completed.',_.nowTS)
+    }
+    $prepareSale(){
+        let $b,$b2,$cntr=_.$('+cntr').to(_.$test)
+        _.prepareSale=_.$('+prepare-sale').to($cntr)
+        let $es=_.$('+elements').to(_.prepareSale)
+        if(!_.isPool){
+            $b=_.$('+button').html('Approve KYC').to($es)
+            $b.onclick=async e=>{
+                for(let i=0;i<_.acs.length;i++){
+                    await _.approveKyc(_.acs[i])
+                }       
+            }
+        }
+        $b2=_.$('+button').html('Prepare sale').to($es)
+        $b2.onclick=async e=>{                        
+            l('---Action: Prepare sale', _.nowTS)
+            let minute=60
+            let hour=minute*60
+            let day=hour*24 
+            let year=day*365
+            let now=Math.floor(+(new Date())/1000) // 1 minute = 60  1 hour = 60*60
+            let saleStartTime=now+1
+            let saleEndTime=saleStartTime+minute*3
+            let salePrice=100
+            let shortFinancePeriod=minute*1 
+            let longFinancePeriod=minute*10
+            let saleShare=51 
+            let teamShare=48 
+            let fundariaShare=1 
+            let investmentGuidesRewardShare=10
+            let poolCap=0
+            let bountyCap = 100000
+            let presaleCap = 100000
+            let airdropCap = 100000
+            let args
+            args=[poolCap,saleStartTime,saleEndTime,shortFinancePeriod,longFinancePeriod,salePrice,saleShare,teamShare,investmentGuidesRewardShare,bountyCap,presaleCap,airdropCap]
+            if(_.isPool) args.splice(8, 0, fundariaShare)
+            await _.Pool.methods.prepareSale(...args).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
+            await _.renewPoolOutput()
+            await _.renewPrepareSaleOutput()        
+            l('saleStartTime', await _.Pool.methods.saleStartTime().call())
+            l('saleEndTime', await _.Pool.methods.saleEndTime().call())
+            l('shortFinancePeriod',_.$shortFinancePeriod.html())
+            l('longFinancePeriod',_.$longFinancePeriod.html())
+            l('longFinancePeriodEndTime', await _.Pool.methods.longFinancePeriodEndTime().call())            
+            l('sharePrice',_.$sharePrice.html())
+            l('saleShare',_.$saleShare.html())
+            l('teamShare',_.$teamShare.html())
+            l('investmentGuidesRewardShare',_.$investmentGuidesRewardShare.html())
+            l('poolCap',_.$poolCap.html())
+            l('bountyCap',_.$bountyCap.html())
+            l('presaleCap',_.$presaleCap.html())
+            l('airdropCap',_.$airdropCap.html())           
+            l('Action completed.',_.nowTS)
+        }                 
+    }
+    
+    $prepareLongFinancePeriod(){
+        let $b,$cntr=_.$('+cntr').to(_.$test)
+        _.$prepareLongFinancePeriod=_.$('+prepare-long-finance-period').to($cntr)
+        $b=_.$('+button').html('Prepare long finance period').to(_.$prepareLongFinancePeriod)
+        $b.onclick=async e=>{
+            l('Act: Prepare long finance period',_.nowTS)
+            l('State before:')
+            l('period', _.$period.html())         
+            l('longFinancePeriodPrepared', await _.Pool.methods.longFinancePeriodPrepared(_.phase).call())
+            await _.Pool.methods.prepareLongFinancePeriod().send({from:_.acs[2],gas:_.gas,gasPrice:_.gasPrice})
+            _.renewPoolOutput()
+            l('State after:') 
+            l('period', _.$period.html())
+            l('longFinancePeriodPrepared', await _.Pool.methods.longFinancePeriodPrepared(_.phase).call())
+            l('Action completed.',_.nowTS)
+        }                          
+    }
+    get votingPrice(){
+        return this.toWei( 1/this.scoinCourse*35 )
+    }
+    $setVotings(){
+        let $b=[],$bs,$cntr=_.$('+cntr').acl('set-votings').to(_.$test)
+        
+        $bs=_.$('+buttons').to($cntr)
+        $b[0]=_.$('+button').html('Set owner voting').to($bs)
+        $b[1]=_.$('+button').html('Apply voting results').to($bs)
+        _.$('+quorum-tit').html('&nbsp;Quorum: ').to($bs)
+        _.$ownerQ = _.$('+quorum').html(0).to($bs)
+        _.$('+win-address-tit').html('&nbsp;Win address: ').to($bs)
+        _.$ownerWinAddr = _.$('+win-address').html('').to($bs)
+        
+        $bs=_.$('+buttons').to($cntr)
+        $b[2]=_.$('+button').html('Set dividends share voting').to($bs)
+        $b[3]=_.$('+button').html('Apply voting results').to($bs)
+        _.$('+quorum-tit').html('&nbsp;Quorum: ').to($bs)
+        _.$dividendsQ = _.$('+quorum').html(0).to($bs)
+        _.$('+win-uint-tit').html('&nbsp;Win uint: ').to($bs)
+        _.$dividendsWinUint = _.$('+win-uint').html(0).to($bs)
+        
+        $bs=_.$('+buttons').to($cntr)
+        $b[4]=_.$('+button').html('Set right to sell startup shares voting').to($bs)
+        $b[5]=_.$('+button').html('Apply voting results').to($bs)
+        _.$('+quorum-tit').html('&nbsp;Quorum: ').to($bs)
+        _.$rightQ = _.$('+quorum').html(0).to($bs)
+        _.$('+win-address-tit').html('&nbsp;Win address: ').to($bs)
+        _.$rightWinAddr = _.$('+win-address').html('').to($bs)        
+        
+        $b[4].onclick = async e=>{
+            l('---Action: setVoting of right to sell shares',_.nowTS)
+            l('State before:')
+            l('votingId', await _.Pool.methods.votingId().call())
+            let endTime=_.now+250            
+            await _.Pool.methods.setVoting(3,_.now+25,endTime).send({from:_.owner, value:_.votingPrice ,gas:_.gas,gasPrice:_.gasPrice})
+            _.votingId = _.rightLastVotingId = await _.Pool.methods.votingId().call()
+            l('State after:')
+            l('votingId', await _.Pool.methods.votingId().call())
+            l('votingStartTime', (await _.Pool.methods.votings(_.votingId).call()).startTime)
+            l('votingEndTime', (await _.Pool.methods.votings(_.votingId).call()).endTime)
+            l('Action completed.',_.nowTS)            
+        }
+        $b[5].onclick = async e=>{
+            if(!_.rightLastVotingId) _.rightLastVotingId = await _.Pool.methods.votingId().call()
+            let startupAddress = _.poolAddress            
+            let abi = await _.ax({m:'GET',p:'output/Pool/Pool.abi'})
+            let startup = new _.web3.eth.Contract(abi, startupAddress)
+            let quorum = await _.Pool.methods.votingQuorum(_.rightLastVotingId).call()
+            _.$rightQ.html(quorum)
+            _.$rightWinAddr.html(startupAddress)                                                  
+            l('---Action: Apply voting results of right to sell shares',_.nowTS)
+            l('State before:')
+            l('votingId',_.rightLastVotingId)
+            l('quorum', quorum)
+            l('fundariaOwnerStartupSharesBalance:', await startup.methods.balanceOf(_.owner).call())
+            l('fundariaStartupSharesBalance:', await startup.methods.balanceOf(_.fundariaAddress).call())                        
+            await _.Pool.methods.applyVotingResults(_.rightLastVotingId).send({from:_.acs[1], gas:_.gas,gasPrice:_.gasPrice})                       
+            l('State after:')
+            l('fundariaOwnerStartupSharesBalance:', await startup.methods.balanceOf(_.owner).call())
+            l('fundariaStartupSharesBalance:', await startup.methods.balanceOf(_.fundariaAddress).call()) 
+            l('Action completed.',_.nowTS)
+        }        
+        
+        $b[0].onclick = async e=>{
+            l('---Action: setVoting for owner',_.nowTS)
+            l('State before:')
+            l('votingId', await _.Pool.methods.votingId().call())
+            let endTime=_.now+250
+            await _.Pool.methods.setVoting(1,_.now+30,endTime).send({from:_.owner, value: _.votingPrice,gas:_.gas,gasPrice:_.gasPrice})
+            _.votingId = _.ownerLastVotingId = await _.Pool.methods.votingId().call()
+            l('State after:')
+            l('votingId', await _.Pool.methods.votingId().call())
+            l('votingStartTime', (await _.Pool.methods.votings(_.votingId).call()).startTime)
+            l('votingEndTime', (await _.Pool.methods.votings(_.votingId).call()).endTime)
+            l('Action completed.',_.nowTS)  
+        }
+        $b[1].onclick = async e=>{
+            let quorum = await _.Pool.methods.votingQuorum(_.ownerLastVotingId).call()
+            let winAddress = await _.Pool.methods.addressPropositionMaxCount(_.ownerLastVotingId).call()
+            _.$ownerQ.html(quorum)
+            _.$ownerWinAddr.html( winAddress )
+            l('---Action: Apply voting results for owner',_.ownerLastVotingId)
+            l('State before:')
+            l('votingId', _.ownerLastVotingId)
+            l('quorum', quorum)
+            l('onwer', await _.Pool.methods.owner().call())
+            l('winAddress', winAddress)
+            await _.Pool.methods.applyVotingResults(_.ownerLastVotingId).send({from:_.acs[1], gas:_.gas,gasPrice:_.gasPrice})
+            _.owner = await _.Pool.methods.owner().call()            
+            l('State after:')
+            l('onwer', _.owner)
+            l('Action completed.',_.nowTS)
+        }
+        $b[2].onclick = async e=>{
+            l('---Action: setVoting for dividends',_.nowTS)
+            l('State before:')
+            l('votingId', await _.Pool.methods.votingId().call())
+            let endTime=_.now+250
+            await _.Pool.methods.setVoting(2,_.now+30,endTime).send({from:_.owner, value: _.votingPrice,gas:_.gas,gasPrice:_.gasPrice})
+            _.votingId = _.dividendsLastVotingId = await _.Pool.methods.votingId().call()
+            l('State after:')
+            l('votingId', await _.Pool.methods.votingId().call())
+            l('votingStartTime', (await _.Pool.methods.votings(_.votingId).call()).startTime)
+            l('votingEndTime', (await _.Pool.methods.votings(_.votingId).call()).endTime)
+            l('Action completed.',_.nowTS)            
+        }
+        $b[3].onclick = async e=>{
+            let quorum = await _.Pool.methods.votingQuorum(_.dividendsLastVotingId).call()
+            let winUint = await _.Pool.methods.uintWinProposition(_.dividendsLastVotingId).call()
+            _.$dividendsQ.html(quorum)
+            _.$dividendsWinUint.html(winUint)
+            l('---Action: Apply voting results for dividends',_.nowTS)
+            l('State before:')
+            l('votingId', _.dividendsLastVotingId)
+            l('quorum', quorum)
+            l('dividendsIncomePercentage', await _.Pool.methods.dividendsIncomePercentage().call())            
+            await _.Pool.methods.applyVotingResults(_.dividendsLastVotingId).send({from:_.acs[1], gas:_.gas,gasPrice:_.gasPrice})
+            l('State after:')
+            l('dividendsIncomePercentage', await _.Pool.methods.dividendsIncomePercentage().call())
+            l('Action completed.',_.nowTS)            
+        }                                        
+    }
+    async transactIn(from,coin){
+        let investor = _.investorFromAddr(from)
+        l('---Action: Transact in by '+investor,_.nowTS)        
+        let $invest = _.$invests[_.investorFromAddr(from,true)]
+        l('State before:')
+        l('coinBalanceOf'+investor, await _.coinBalance(from))
+        l('scoinBalanceOf'+investor, await _.scoinBalance(from))
+        l('poolScoinBalance',await _.scoinBalance(_.PoolAddress))         
+        let coinWei = await _.toWei(coin)
+        let scoin=0
+        if(investor=='Investor0'){
+          scoin = coinWei
+          coinWei = 0  
+          await _.SCOIN.methods.approve(_.PoolAddress,scoin).send({from,gas:_.gas,gasPrice:_.gasPrice})              
+        }      
+        await _.Pool.methods.transactIn(scoin).send({from,value:coinWei,gas:_.gas,gasPrice:_.gasPrice})
+        l('State after:')
+        await _.renewPoolOutput()
+        $invest.renewInvestorOutput(from) 
+        l('coinBalanceOf'+investor, $invest.coin.html())
+        l('scoinBalanceOf'+investor, $invest.scoin.html())
+        l('poolScoinBalance', _.$poolScoinBalance.html())          
+        l('Action completed.',_.nowTS)            
+    }
+    async transactOut(from,scoin,to){
+        let investor = _.investorFromAddr(from)
+        let recipient = _.investorFromAddr(to)
+        let $invest = _.$invests[_.investorFromAddr(from,true)]
+        l('---Action: Transact out by '+investor,_.nowTS)
+        l('State before:') 
+        let scoinWei = await _.toWei(scoin)
+        l('poolScoinBalance',await _.scoinBalance(_.PoolAddress))
+        l('scoinBalanceOf'+recipient, await _.scoinBalance(to))         
+        l('income',_.toScoin(await _.Pool.methods.income(_.phase).call()))
+        l('available', _.toScoin(await _.Pool.methods.available(_.now).call()))        
+        await _.Pool.methods.transactOut(to,scoinWei).send({from,gas:_.gas,gasPrice:_.gasPrice})
+        await _.renewPoolOutput()
+        await $invest.renewInvestorOutput(to)
+        l('State after:')                 
+        l('poolScoinBalance',_.$poolScoinBalance.html())
+        l('scoinBalanceOf'+recipient, await _.scoinBalance(to))        
+        l('income', _.$income.html())
+        l('available', _.$available.html())
+        l('Action completed.',_.nowTS)    
+    }            
+    $investInStartup(){
+        let $cntr=_.$('+cntr').to(_.$test)
+        let $iis=_.$('+button').html('invest in startup').to($cntr)
+        let $am=_.$({type:'text'},'input').to($cntr)
+        $am.value=100
+        $iis.onclick=async e=>{
+            let scoin = _.toWei($am.value)
+            let startupAddress = _.poolAddress
+            let abi = await _.ax({m:'GET',p:'output/Pool/Pool.abi'})
+            let startup = new _.web3.eth.Contract(abi, startupAddress)                        
+            l('---Action: Invest in startup',_.nowTS)
+            l('State before:')
+            l('startupAddress',startupAddress)            
+            //l('poolCoinBalance', await _.coinBalance(_.PoolAddress))
+            l('poolScoinBalance', await _.scoinBalance(_.PoolAddress))
+            l('fundariaStartupSharesBalance', await startup.methods.balanceOf(_.fundariaAddress).call())
+            l('investedScoin',$am.value)
+            //await _.SCOIN.methods.approve(_.swapRouterAddress, scoin).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
+            await _.Pool.methods.investInStartup(startupAddress, scoin, false).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
+            await _.renewPoolOutput()
+            l('State after:')            
+            //l('poolCoinBalance', _.$poolCoinBalance.html())
+            l('poolScoinBalance', _.$poolScoinBalance.html())
+            l('fundariaStartupSharesBalance', await startup.methods.balanceOf(_.fundariaAddress).call())
+            l('Action completed.',_.nowTS)
+        }
+        _.$withdrawInvestment()
+    }
+    $withdrawInvestment(){        
+        let $cntr=_.$('+cntr').to(_.$test)
+        let $iis=_.$('+button').html('withdraw investment from startup').to($cntr)
+        $iis.onclick=async e=>{
+            let startupAddress = _.poolAddress
+            let abi = await _.ax({m:'GET',p:'output/Pool/Pool.abi'})
+            let startup = new _.web3.eth.Contract(abi, startupAddress)
+            l('---Action: Withdraw investment from startup',_.nowTS)
+            l('State before:')
+            l('startupAddress',startupAddress)            
+            //l('poolCoinBalance', await _.coinBalance(_.PoolAddress))
+            l('poolScoinBalance', await _.scoinBalance(_.PoolAddress))
+            l('fundariaStartupSharesBalance', await startup.methods.balanceOf(_.fundariaAddress).call())
+            await _.Pool.methods.withdrawStartupInvestment(startupAddress).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
+            await _.renewPoolOutput()
+            l('State after:')            
+            //l('poolCoinBalance', _.$poolCoinBalance.html())
+            l('poolScoinBalance', _.$poolScoinBalance.html())
+            l('fundariaStartupSharesBalance', await startup.methods.balanceOf(_.fundariaAddress).call())
+            l('Action completed.',_.nowTS)            
+        }
+        _.$claimInvestmentGuideReward()                   
+    }
+    $claimInvestmentGuideReward(){        
+        let $cntr=_.$('+cntr').to(_.$test)
+        let $iis=_.$('+button').html('claim investment guide reward in startup').to($cntr)
+        $iis.onclick=async e=>{
+            let startupAddress = _.poolAddress
+            let abi = await _.ax({m:'GET',p:'output/Pool/Pool.abi'})
+            let startup = new _.web3.eth.Contract(abi, startupAddress)
+            let investorAddr = _.acs[2]
+            let investor = _.investorFromAddr(investorAddr) 
+            l('---Action: Claim investment guide reward from startup',_.nowTS)
+            l('State before:')
+            l('startupAddress',startupAddress)
+            l('investedBy',investor)            
+            l('poolScoinBalance', await _.scoinBalance(_.PoolAddress))
+            l('startupInvestmentGuideRewardAvailable',_.toScoin(await startup.methods.investmentGuideRewardAvailable(_.now,investorAddr,_.phase).call()))             
+            await _.Pool.methods.claimStartupInvestmentGuideReward(startupAddress,investorAddr).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
+            await _.renewPoolOutput()
+            l('State after:')            
+            l('poolScoinBalance', _.$poolScoinBalance.html())
+            l('startupInvestmentGuideRewardAvailable',_.toScoin(await startup.methods.investmentGuideRewardAvailable(_.now,investorAddr,_.phase).call()))
+            l('Action completed.',_.nowTS)        
+        }
+        _.$voteInStartupForDividends()                
+    }
+    $voteInStartupForDividends(){
+        let $cntr=_.$('+cntr').to(_.$test)
+        let $iis=_.$('+button').html('vote in startup for dividends').to($cntr)
+        $iis.onclick=async e=>{
+            let startupAddress = _.poolAddress
+            let abi = await _.ax({m:'GET',p:'output/Pool/Pool.abi'})
+            let startup = new _.web3.eth.Contract(abi, startupAddress)
+            let startupLastVotingId = await startup.methods.votingId().call()
+            let quorum = await startup.methods.votingQuorum(startupLastVotingId).call() 
+            l('---Action: Vote in startup for dividends', _.nowTS)
+            l('State before:')
+            l('startupAddress',startupAddress)            
+            l('startupLastVotingId',startupLastVotingId)
+            let uintProposition=80
+            l('quorum', quorum)
+            l('uintProposition',uintProposition)            
+            await _.Pool.methods.voteInStartup(startupAddress,startupLastVotingId,_.address0,uintProposition).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})            
+            l('State after:')
+            l('quorum', await startup.methods.votingQuorum(startupLastVotingId).call())
+            l('startupUintWinProposition', await startup.methods.uintWinProposition(startupLastVotingId).call())
+            l('Action completed.',_.nowTS)
+        }
+        _.$voteInStartupForOwner()        
+    }
+    $voteInStartupForOwner(){
+        let $cntr=_.$('+cntr').to(_.$test)
+        let $iis=_.$('+button').html('vote in startup for owner').to($cntr)
+        $iis.onclick=async e=>{
+            let startupAddress = _.poolAddress
+            let abi = await _.ax({m:'GET',p:'output/Pool/Pool.abi'})
+            let startup = new _.web3.eth.Contract(abi, startupAddress)
+            let startupLastVotingId = await startup.methods.votingId().call()
+            let quorum = await startup.methods.votingQuorum(startupLastVotingId).call() 
+            l('---Action: Vote in startup for owner', _.nowTS)
+            l('State before:')
+            l('startupAddress',startupAddress)            
+            l('startupLastVotingId',startupLastVotingId)
+            let addressProposition=_.acs[1]
+            l('quorum', quorum)
+            l('voteForOwnerWinAddress', await startup.methods.addressPropositionMaxCount(startupLastVotingId).call())           
+            await _.Pool.methods.voteInStartup(startupAddress,startupLastVotingId,addressProposition,0).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
+            l('State after:')
+            l('quorum', await startup.methods.votingQuorum(startupLastVotingId).call())
+            l('voteForOwnerWinAddress', await startup.methods.addressPropositionMaxCount(startupLastVotingId).call())
+            l('Action completed.',_.nowTS)
+        }
+        _.$receiveDividendsInStartup()           
+    }
+    $receiveDividendsInStartup(){
+        let $cntr=_.$('+cntr').to(_.$test)
+        let $rdis=_.$('+button').html('receive dividends in startup').to($cntr)
+        $rdis.onclick=async e=>{
+            let startupAddress = _.poolAddress
+            let abi = await _.ax({m:'GET',p:'output/Pool/Pool.abi'})
+            let startup = new _.web3.eth.Contract(abi, startupAddress)         
+            l('---Action: Receive dividends in startup', _.nowTS)
+            l('State before:')
+            l('poolScoinBalance', await _.scoinBalance(_.PoolAddress))
+            l('fundariaStartupReceivedDividends', _.toScoin( await startup.methods.investorReceivedDividends(_.fundariaAddress).call() )) 
+            await _.Pool.methods.receiveDividendsInStartup(_.poolAddress).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
+            await _.renewPoolOutput()
+            l('State after:')
+            l('poolScoinBalance', _.$poolScoinBalance.html())
+            l('fundariaStartupReceivedDividends', _.toScoin( await startup.methods.investorReceivedDividends(_.fundariaAddress).call() ))
+            l('Action completed.', _.nowTS)
+        }                
+    }
+    $save(){
+        let $cntr=_.$('+cntr').to(_.$test)
+        let $save = _.$('+button').html('save').to($cntr)    
+        $save.onclick=e=>{            
+          let del,dataStr,arr=[]
+          _.log[_.logId].ech(e=>{
+              arr.push(e.join(' '))    
+          })
+          del=_.$('+a')
+          dataStr="data:text/json;charset=utf-8," + encodeURIComponent(arr.join("\n"))
+          del.setAttribute("href",dataStr)
+          del.setAttribute("download","log-"+_.PoolAddress+'-'+_.nowTS+'.txt')
+          del.click()
+        }
+    }
+}
+window.onload = ()=> new Testing()
+
+</script>
+</head>
+<body><test></test></body>
+</html>

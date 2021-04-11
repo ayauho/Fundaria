@@ -1,0 +1,164 @@
+<?                                                
+    if(!empty($_POST)){
+        extract($_POST);
+        
+        if($act=='save address'){
+          $root=$_SERVER['CONTEXT_DOCUMENT_ROOT'];
+          include($root.'php/Classes/Mysqli.php');
+          include($root.'php/functions/library.php');
+          $F = new Mysql('fundariatest');
+          $F->Update('smartcontractsenitities','by_default',"'$address'","variable='$name'");            
+        } else {
+          
+          $assoc=['Fundaria','Pool','Dai','PancakeRouter','Helper'];
+          #if(FALSE!==strpos($_SERVER['SERVER_SOFTWARE'],"Ubuntu")) $path="/home/ayauho/";
+          $path='/var/www/fundaria-test/sc/';
+          if($act=='helper')
+            $execs[4]="docker run -v $path:/sc ethereum/solc:0.8.3 --bin --abi --overwrite --optimize -o sc/output/Libraries/ sc/sol/Helper.sol  > a.txt 2> err/err4.txt";
+          
+          #echo $execs[1];
+          if($act=='fundaria'){
+              $execs[0]="docker run -v $path:/sc ethereum/solc:0.8.3 --bin --abi --overwrite --optimize --libraries Helper:$helperAddress -o sc/output/Fundaria/ sc/sol/FundariaPool.sol  > a.txt 2> err/err1.txt";
+          }
+          if($act=='pool'){            
+              $execs[1]="docker run -v $path:/sc ethereum/solc:0.8.3 --bin --abi --overwrite --optimize --libraries Helper:$helperAddress -o sc/output/Pool/ sc/sol/Pool.sol  > a.txt 2> err/err2.txt";    
+          }
+  
+          foreach($execs as $i=>$exec) {
+              shell_exec($exec);
+              $k=$assoc[$i];
+              $i++;
+              $err=file_get_contents("err/err$i.txt");
+              if($err) $output[$k]=$err;    
+          }
+          print_r($output);
+        }
+        #print_r($result_code);
+    } else {
+?>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Deploy Fundaria Contract</title>
+</head>
+<body>
+
+    <test></test>
+
+</body>
+<script src="https://cdn.jsdelivr.net/npm/web3@1.2.6/dist/web3.min.js"></script>
+<script src="/test/js/src/Helper-src.js?<?=time()?>"></script>
+
+<script>
+  var $,web3,accs,gas=7000000,gasPrice
+  var fundariaAddress, helperAddress 
+  var owner,ownerPk='0x5f82d303c3ab402c0af006b64642e187aae75e9cc545f850ad4012551856fada'
+  var doner,donerPK='0x1e3f683740dbe0b1d8d4ff9f0c12c74871f1f98373802370476625ad207a2053' //0x19dF2bF91464b9C9fEfc16A7e49F8C2f4fAb40Aa
+  var scoinAddress='0x731c348E57A88CaCD1Aa3E660f1Aad98008a345f'
+  var swapRouterAddress='0xD99D1c33F9fC3444f8101754aBC46c52416550D1'
+  localStorage.scoinAddress=scoinAddress
+  localStorage.swapRouterAddress=swapRouterAddress
+  
+  ;(async ()=>{
+    $=new HelperSrc()
+    web3 = new Web3('https://data-seed-prebsc-1-s1.binance.org:8545')
+    owner = (web3.eth.accounts.privateKeyToAccount(ownerPk)).address
+    web3.eth.accounts.wallet.add(ownerPk)
+    web3.eth.defaultAccount = owner
+    l('owner',owner)    
+    gasPrice = parseInt(parseInt(await web3.eth.getGasPrice())*2).toString()
+    l('gasPrice', gasPrice) 
+    let $b1 = $.$('+button').html('deploy').to($.$body)
+    let $b2 = $.$('+button').html('deploy helper & fundaria').to($.$body)
+    let $b3 = $.$('+button').html('deploy only fundaria').to($.$body)
+    let $b4 = $.$('+button').html('deploy only pool').to($.$body)
+    let $b5 = $.$('+button').html('donate bnb').to($.$body)
+
+    $b1.onclick = e=> go(0)
+    $b2.onclick = e=> go(1)
+    $b3.onclick = async e=> {        
+        go(2)
+    }
+    $b4.onclick = e=>{
+        go(3)      
+    }
+    $b5.onclick = async e=>{
+      doner = (web3.eth.accounts.privateKeyToAccount(donerPK)).address
+      web3.eth.accounts.wallet.add(donerPK)
+      await web3.eth.sendTransaction({to:owner,from:doner, value:web3.utils.toWei("6", "ether"), gas, gasPrice})
+      l('Successfuly donated !')              
+    }    
+   
+  })();
+  async function go(type=0){
+    console.clear()
+    
+    function deploy(contract,bytecode,arguments,callback=()=>{},skip=false){
+      bytecode = '0x'+bytecode
+      if(!skip)contract.deploy({data: bytecode.toString(),arguments}).send({from: owner,gas,gasPrice}, function(error, transactionHash){
+        //l(transactionHash)
+      }).then(callback).catch(err=>{
+        console.error(err);
+      });
+      else callback(false)     
+    }
+    
+    async function deployFundaria(callback=()=>{}){
+    
+        log(await $.ax({m:'POST',p:location.href,rq:{act:'fundaria',helperAddress:localStorage.helperAddress}}))
+    
+        abi = await $.ax({m:'GET',p:'output/Fundaria/Pool.abi'})
+        bytecode = await $.ax({m:'GET',p:'output/Fundaria/Pool.bin'})
+        contract = new web3.eth.Contract(abi)
+        deploy(contract,bytecode,[scoinAddress,swapRouterAddress],async deployment=>{
+            let fundariaAddress=deployment.options.address
+            console.log('FUNDARIA: ',fundariaAddress);
+            localStorage.fundariaAddress=fundariaAddress
+            callback()
+        })                          
+    }    
+
+    async function deployHelper(callback){
+        
+        log(await $.ax({m:'POST',p:location.href,rq:{act:'helper'}}))
+        
+        abi = await $.ax({m:'GET',p:'output/Libraries/Helper.abi'})
+        bytecode = await $.ax({m:'GET',p:'output/Libraries/Helper.bin'})
+        contract = new web3.eth.Contract(abi)
+        deploy(contract,bytecode,[],async deployment=>{
+            let helperAddress=deployment.options.address
+            console.log('Helper: ',helperAddress);
+            await $.ax({m:'POST',p:location.href,rq:{act:'save address',address:helperAddress,name:'helperAddress'}})
+            localStorage.helperAddress=helperAddress
+            callback()
+        })                          
+    }
+    
+    async function deployPool(){
+        
+        log(await $.ax({m:'POST',p:location.href,rq:{act:'pool',helperAddress:localStorage.helperAddress}}))
+        
+        abi = await $.ax({m:'GET',p:'output/Pool/Pool.abi'})
+        bytecode = await $.ax({m:'GET',p:'output/Pool/Pool.bin'})
+        bytecode = bytecode.split("\n")[0]               
+        contract = new web3.eth.Contract(abi)    
+        fundariaAddress=localStorage.fundariaAddress
+        arguments=[fundariaAddress,scoinAddress,swapRouterAddress]    
+        deploy(contract,bytecode,arguments,async deployment=>{
+            let poolAddress=deployment.options.address
+            localStorage.poolAddress=poolAddress
+            console.log('POOL: ',poolAddress);
+        })        
+    }
+
+    if(!type)deployHelper(()=> deployFundaria(deployPool))
+    if(type==2) deployFundaria() 
+    if(type==1) deployHelper(()=> deployFundaria())
+    if(type==3) deployPool()
+  }
+
+</script>
+
+</script>
+</html>
+<?}?>
