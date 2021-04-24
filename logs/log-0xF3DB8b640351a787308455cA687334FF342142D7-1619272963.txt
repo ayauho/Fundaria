@@ -1,0 +1,36 @@
+Task: Receive dividends in startup
+Abstract: the same
+Sequence: Transact in, invest in startup, (startup generates income), receive dividends in startup
+
+Investor0 0x621DD25aDC6550bef3157A04C11C99827Cd24e9c
+Investor1 0xB1Df2e5cAdF41eCa5d807c73622B31Cc5fc697EF
+Investor2 0x989Cdbb1eDCd324367067C1b6Aba4963269eF12D
+BNB/BUSD 434.5994
+---Action: Transact in by Investor0 1619272592
+State before:
+coinBalanceOfInvestor0 175.6639
+scoinBalanceOfInvestor0 30956077.20
+poolScoinBalance 0.00
+State after:
+coinBalanceOfInvestor0 175.6675
+scoinBalanceOfInvestor0 30956077.20
+poolScoinBalance 100.00
+Action completed. 1619272617
+---Action: Invest in startup 1619272700
+State before:
+startupAddress 0xc7A453EC1305eA080C66B1f315947bB6DF25a9B9
+poolScoinBalance 100.00
+startupSharesBalance 0
+investedScoin 100
+State after:
+poolScoinBalance 0.01
+startupSharesBalance 9960
+Action completed. 1619272716
+---Action: Receive dividends in startup 1619272939
+State before:
+poolScoinBalance 0.01
+startupReceivedDividends 0.00
+State after:
+poolScoinBalance 25.76
+startupReceivedDividends 25.76
+Action completed. 1619272956
