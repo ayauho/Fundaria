@@ -1,0 +1,57 @@
+Task: Test investing in startup, vote in startup, withdraw investment from startup
+Abstract: startup can invest in another startup and vote there, also withdraw inv. from there
+Sequence: Transact in, invest in startup, vote for dividends, vote for owner, withdraw investment from startup
+
+Investor0 0x621DD25aDC6550bef3157A04C11C99827Cd24e9c
+Investor1 0xB1Df2e5cAdF41eCa5d807c73622B31Cc5fc697EF
+Investor2 0x989Cdbb1eDCd324367067C1b6Aba4963269eF12D
+BNB/BUSD 444.3789
+---Action: Transact in by Investor0 1619270183
+State before:
+coinBalanceOfInvestor0 176.4581
+scoinBalanceOfInvestor0 30956277.20
+poolScoinBalance 0.00
+State after:
+coinBalanceOfInvestor0 176.4617
+scoinBalanceOfInvestor0 30956277.20
+poolScoinBalance 100.00
+Action completed. 1619270208
+---Action: Invest in startup 1619270222
+State before:
+startupAddress 0x9b20D1136045B321a90656451E2EB21D511E7E2e
+poolScoinBalance 100.00
+startupSharesBalance 0
+investedScoin 100
+State after:
+poolScoinBalance 0.01
+startupSharesBalance 9960
+Action completed. 1619270238
+---Action: Vote in startup for dividends 1619270432
+State before:
+startupAddress 0x9b20D1136045B321a90656451E2EB21D511E7E2e
+startupLastVotingId 1
+quorum 0
+uintProposition 80
+State after:
+quorum 51.51546498396607
+startupUintWinProposition 80
+Action completed. 1619270441
+---Action: Vote in startup for owner 1619270487
+State before:
+startupAddress 0x9b20D1136045B321a90656451E2EB21D511E7E2e
+startupLastVotingId 2
+quorum 0
+voteForOwnerWinAddress 0x0000000000000000000000000000000000000000
+State after:
+quorum 51.51546498396607
+voteForOwnerWinAddress 0xB1Df2e5cAdF41eCa5d807c73622B31Cc5fc697EF
+Action completed. 1619270494
+---Action: Withdraw investment from startup 1619270516
+State before:
+startupAddress 0x9b20D1136045B321a90656451E2EB21D511E7E2e
+poolScoinBalance 0.01
+startupSharesBalance 9960
+State after:
+poolScoinBalance 69.73
+startupSharesBalance 0
+Action completed. 1619270533
