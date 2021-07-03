@@ -2,6 +2,7 @@
 pragma solidity ^0.8.3;
 
 import "./ISwapRouter.sol";
+import "./IPool.sol";
 
     struct InvestedData {
         address investmentGuide;
@@ -28,7 +29,10 @@ import "./ISwapRouter.sol";
         bool resultsApplied;
     }
 
+
+
 library Helper {
+    uint constant m = 1000000000;
 
     struct PrepareInvestData {
         uint8 phase;
@@ -157,6 +161,13 @@ library Helper {
             splitWithdrawnOnShortFinancePeriods[phase][i] += (swosfp-srosfp);
     }
 
+    function rejectInvestmentWithdrawal(InvestedData storage investedData, uint[] storage rejectedInvestmentWithdrawals, uint8 phase) public {
+        require(!investedData.rejectedWithdrawal, 'Investor rejected to withdraw investment already');
+        investedData.rejectedWithdrawal = true;
+        rejectedInvestmentWithdrawals[phase] += investedData.scoin;
+        investedData.investmentGuideRewardAvailableTotal = investedData.investmentGuideReward;         
+    }
+
     function claimInvestmentGuideReward(InvestedData storage investedData, uint available, uint8 phase, uint[] storage investmentGuideRewards, uint[] storage transactedOut, uint[] storage claimedIGRTotal) public {
         require(msg.sender == investedData.investmentGuide, 'Not investment guide of this investor');
         require(available > 0, 'No reward available to claim');
@@ -204,6 +215,26 @@ library Helper {
         voting.quorumCount += _balances[msg.sender];
         voting.quorumCount += balancesLocked[phase][msg.sender];
         if(voting.endTime > _balancesLockedTill[msg.sender]) _balancesLockedTill[msg.sender] = voting.endTime;       
+    }
+
+    function applyVotingResults(Voting storage voting, address _owner, uint8 dividendsIncomePercentage, uint256 totalSupply, uint8 quorum) public returns(address owner, uint8 uintWinProposition) {        
+        require(voting.quorumCount * 100 * m / totalSupply > quorum * m, 'No quorum');
+        require(block.timestamp > voting.endTime, 'Voting time did not finished yet');
+        require(!voting.resultsApplied, 'Results applied already');
+        owner = _owner;
+        uintWinProposition = dividendsIncomePercentage;
+        if(voting.typo == 1) {
+            require(voting.adressMaxCount > totalSupply * quorum / 100, 'Not enough votes');
+            owner = voting.addressPropositionMaxCount;
+        }        
+        if(voting.typo == 2) {
+            uintWinProposition = uint8(voting.uintSum / voting.uintCount);
+        }
+        if(voting.typo == 3) {
+            IPool startup = IPool(payable(voting.addressPropositionMaxCount));
+            startup.transfer(owner, startup.balanceOf(address(this)));
+        }
+        voting.resultsApplied = true;         
     }
 
     function receiveDividends(mapping(address=>uint) storage investorReceivedDividends, address investor, uint dividends, uint dividendsPaymentPeriodEndTime, mapping(address => uint) storage _balancesLockedTill, uint[] storage transactedOut, uint8 phase) public {
