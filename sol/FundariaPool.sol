@@ -6,7 +6,7 @@ import "./ISwapRouter.sol";
 import "./Helper.sol";
 
 contract Pool is ESP1 {
-
+    
     uint public constant e18 = 1e18;
     uint8 public phase = 1;
     uint16 public shortFinancePeriodsCount;
@@ -24,7 +24,7 @@ contract Pool is ESP1 {
     address public scoinAddress;
     SwapRouter public swapRouter;
     address public swapRouterAddress;
-    Pool public startup;
+    Pool public Startup;
 
     uint public poolCap;
 
@@ -39,6 +39,7 @@ contract Pool is ESP1 {
     uint[] public investedTotal = new uint[](16);
     uint[] public withdrawnTotal = new uint[](16);
     uint[] public claimedIGRTotal = new uint[](16);
+    uint[] public suppliedTotal = new uint[](16);
     mapping(uint=>uint)[16] splitWithdrawnOnShortFinancePeriods;
 
     bool[] public longFinancePeriodPrepared = new bool[](16);
@@ -86,8 +87,8 @@ contract Pool is ESP1 {
 
     function processInvest() public payable {
         require(setPeriod() > 0, 'The sale has not yet begun');
-        if(period == 1) invest(address(0), false);
-        else if(period==2 && block.timestamp > saleEndTime + 1 days && msg.value > 0) transactIn(0);
+        if(period == 1) invest(address(this), false);
+        else if(period==2 && block.timestamp > saleEndTime + 6 hours && msg.value > 0) transactIn(0);
         else revert();        
     }    
 
@@ -103,11 +104,6 @@ contract Pool is ESP1 {
         setPeriod();
         require(!not&&_period==period || not&&_period!=period, 'Inappropriate period');
         _;
-    }
-
-    modifier onlyOwnerOrAnyoneAfterSaleEndTime {
-        require(setPeriod()==2 || msg.sender==_owner, 'Message sender is not owner or sale end time has not come');
-        _;  
     }
 
     modifier onlyInvestor {
@@ -130,12 +126,15 @@ contract Pool is ESP1 {
         _;
     }  
 
-    event PrepareSale(uint8 _phase, uint _poolCap, uint _saleStartTime, uint _saleEndTime, uint32 _shortFinancePeriod, uint32 _longFinancePeriod, uint _sharePrice, uint8 _saleShare, uint8 _teamShare, uint8 _investmentGuidesRewardShare, uint _bountyCap, uint _presaleCap,  uint256 time);
+    event PrepareSale(uint8 _phase, uint _poolCap, uint _saleStartTime, uint _saleEndTime, uint32 _shortFinancePeriod, uint32 _longFinancePeriod, uint _sharePrice, uint8 _saleShare, uint8 _teamShare, uint8 _investmentGuidesRewardShare, uint _bountyCap, uint _presaleCap, uint _airdropCap);
     function prepareSale(uint _poolCap, uint _saleStartTime, uint _saleEndTime, uint32 _shortFinancePeriod, uint32 _longFinancePeriod, uint _sharePrice, uint8 _saleShare, uint8 _teamShare, uint8 _investmentGuidesRewardShare, uint _bountyCap, uint _presaleCap, uint _airdropCap) public onlyOwner {
         require(setPeriod()==0, 'Only available before sale start time');            
         if(block.timestamp > longFinancePeriodEndTime && longFinancePeriodEndTime > 0) {
-            transactedIn[phase+1] += investmentGuideRewards[phase];
-            transactedIn[phase+1] += available(block.timestamp);
+            uint scoinBalance = Scoin.balanceOf(address(this));
+            uint av = available(block.timestamp);
+            uint transfer = investmentGuideRewards[phase]+av;
+            if(transfer>scoinBalance)transfer=scoinBalance;
+            transactedIn[phase+1] += transfer;
             unlockTeamShares();
             phase++;
         }
@@ -143,7 +142,7 @@ contract Pool is ESP1 {
         setSharePrice(_sharePrice);        
         setShares(_saleShare, _teamShare, _investmentGuidesRewardShare);
         setCaps(_poolCap, _bountyCap, _presaleCap, _airdropCap);
-        emit PrepareSale(phase, _poolCap, _saleStartTime, _saleEndTime, _shortFinancePeriod, _longFinancePeriod, _sharePrice, _saleShare, _teamShare, _investmentGuidesRewardShare, _bountyCap, _presaleCap, block.timestamp);
+        emit PrepareSale(phase, _poolCap, _saleStartTime, _saleEndTime, _shortFinancePeriod, _longFinancePeriod, _sharePrice, _saleShare, _teamShare, _investmentGuidesRewardShare, _bountyCap, _presaleCap, _airdropCap);
     }
 
     function setPeriods(uint _saleStartTime, uint _saleEndTime, uint32 _shortFinancePeriod, uint32 _longFinancePeriod) internal {        
@@ -184,7 +183,9 @@ contract Pool is ESP1 {
         require(kycApprovedOf(msg.sender), 'ES1: sender KYC not approved yet');
         (uint quantity, uint scoin, uint scoinRemnant) = Helper.investStep1(invested[msg.sender][phase], swapRouter, scoinAddress, poolCap, sharePrice, investmentGuide, rejectedWithdrawal, investedTotal, phase);        
         Helper.investStep2(invested[msg.sender][phase], scoin, investmentGuidesRewardShare, phase, investmentGuideRewards);
-        _totalSupply += Helper.investStep3(invested[msg.sender][phase], _balances, balancesLocked, phase, saleShare, teamShare, platformShare, quantity, _owner, address(0));
+        uint supplied = Helper.investStep3(invested[msg.sender][phase], _balances, balancesLocked, phase, saleShare, teamShare, platformShare, quantity, _owner, address(0));
+        _totalSupply += supplied;
+        suppliedTotal[phase] += supplied;        
         if(scoinRemnant>0) Scoin.transfer(msg.sender,scoinRemnant);
         emit Transfer(address(0), msg.sender, quantity);
         emit Invested(msg.sender, investmentGuide, scoin, quantity, rejectedWithdrawal, phase, block.timestamp);
@@ -192,7 +193,8 @@ contract Pool is ESP1 {
     }
 
     event LongFinancePeriodPrepared(address by, uint256 time);
-    function prepareLongFinancePeriod() public onlyOwnerOrAnyoneAfterSaleEndTime {
+    function prepareLongFinancePeriod() public {
+        setPeriod();
         if(block.timestamp > saleEndTime) longFinancePeriodPrepared[phase] = true;
         emit LongFinancePeriodPrepared(msg.sender, block.timestamp);
     }
@@ -205,26 +207,26 @@ contract Pool is ESP1 {
     function withdrawInvestment() public needPeriod(2, false) wasLongFinancePeriodPrepared returns(uint) {
         InvestedData storage investedData = invested[msg.sender][phase]; 
         require(_balances[msg.sender]>=investedData.quantity, "Not enough shares on investor's balance");
+        require(investedData.quantity > 0, 'No investment shares');
         _balances[msg.sender] -= investedData.quantity; 
         uint igrat = investmentGuideRewardAvailableTotal(block.timestamp, msg.sender, phase);
         uint _nowShortFinancePeriodNum = nowShortFinancePeriodNum(block.timestamp);
         (uint toWithdraw, uint burned) = Helper.withdrawInvestment1(investedData, _owner, balancesLocked, phase, shortFinancePeriodsCount, igrat, _nowShortFinancePeriodNum, Scoin.balanceOf(address(this)), address(0));
-        _totalSupply -= (investedData.quantity + burned);
+        uint totalBurned = investedData.quantity + burned;
+        _totalSupply -= totalBurned;
+        suppliedTotal[phase] -= totalBurned;
         Helper.withdrawInvestment2(investedData, withdrawnTotal, splitWithdrawnOnShortFinancePeriods, shortFinancePeriodsCount, _nowShortFinancePeriodNum, igrat, phase, toWithdraw);
         Scoin.transfer(msg.sender, toWithdraw);
         emit Transfer(msg.sender, address(0), investedData.quantity);
         emit Transfer(address(0), address(0), burned);
         emit InvestmentWithdrawn(msg.sender, toWithdraw, investedData.quantity, phase, block.timestamp);
+        investedData.quantity = 0;
         return toWithdraw;             
     }
 
     event InvestmentWithdrawalRejected(address investor, uint8 phase, uint256 time);
     function rejectInvestmentWithdrawal() public {
-        InvestedData storage investedData = invested[msg.sender][phase];
-        require(!investedData.rejectedWithdrawal, 'Investor rejected to withdraw investment already');
-        investedData.rejectedWithdrawal = true;
-        rejectedInvestmentWithdrawals[phase] += investedData.scoin;
-        investedData.investmentGuideRewardAvailableTotal = investedData.investmentGuideReward; 
+        Helper.rejectInvestmentWithdrawal(invested[msg.sender][phase], rejectedInvestmentWithdrawals, phase);
         emit InvestmentWithdrawalRejected(msg.sender, phase, block.timestamp);    
     }
 
@@ -260,6 +262,10 @@ contract Pool is ESP1 {
         return Helper.coinToScoin(coin, swapRouter, scoinAddress);    
     }
 
+    function ScoinToCoin(uint scoin) public view returns(uint[] memory) {
+        return Helper.scoinToCoin(scoin, swapRouter, scoinAddress);    
+    }    
+
     event VotingWasSet(address initiator, uint _votingId, uint8 _typo, uint startTime, uint endTime, uint8 _phase, uint256 time);
     function setVoting(uint8 typo, uint startTime, uint endTime) public payable onlyInvestor {
         votingId++;
@@ -275,35 +281,9 @@ contract Pool is ESP1 {
     }
 
     event VotingResultsApplied(address applier, uint _votingId, address _owner, uint8 _dividendsIncomePercentage, uint8 _phase, uint256 time);
-    function applyVotingResults(uint _votingId) public {
-        Voting storage voting = votings[_votingId];
-        require(block.timestamp > voting.endTime, 'Voting time did not finished yet');
-        require(!voting.resultsApplied, 'Results applied already');
-        require(votingQuorum(_votingId) > quorum, 'No quorum');
-        if(voting.typo == 1) {
-            require(voting.adressMaxCount > _totalSupply * quorum / 100, 'Not enough votes');
-            _owner = voting.addressPropositionMaxCount;
-        }
-        if(voting.typo == 2) dividendsIncomePercentage = uint8(uintWinProposition(_votingId));
-        if(voting.typo == 3) {
-            startup = Pool(payable(voting.addressPropositionMaxCount));
-            startup.transfer(_owner, startup.balanceOf(address(this)));
-        }
-        voting.resultsApplied = true; 
-        emit VotingResultsApplied(msg.sender, _votingId, _owner, dividendsIncomePercentage, phase, block.timestamp);
-    }
-
-    function votingQuorum(uint _votingId) public view returns(uint) {
-        return votings[_votingId].quorumCount * 100 / _totalSupply;
-    }
-
-    function addressPropositionMaxCount(uint _votingId) public view returns(address) {
-        return votings[_votingId].addressPropositionMaxCount;    
-    }
-
-    function uintWinProposition(uint _votingId) public view returns(uint) {
-        if(votings[_votingId].uintCount==0) return 0;
-        return votings[_votingId].uintSum / votings[_votingId].uintCount;    
+    function applyVotingResults(uint _votingId) public {        
+        (_owner, dividendsIncomePercentage) = Helper.applyVotingResults(votings[_votingId], _owner, dividendsIncomePercentage, _totalSupply, quorum);
+        emit VotingResultsApplied(msg.sender, _votingId, _owner, dividendsIncomePercentage, phase, block.timestamp);   
     }
 
     event TransactedIn(address transactor, uint256 coin, uint scoin, uint256 time);
@@ -321,6 +301,18 @@ contract Pool is ESP1 {
         emit TransactedOut(msg.sender, to, scoin, phase, block.timestamp);
     }
 
+    event DelegatedTransactOut(address to, uint scoinAmount, uint256 time);
+    function delegateTransactOut(address to, uint amount) public ownerOrDelegated(1) {        
+        Helper.delegateTransactOut(to, amount, delegatedTransactOutTotal, delegatedTransactOut, _owner);
+        emit DelegatedTransactOut(to, amount, block.timestamp);
+    }
+
+    event UndelegatedTransactOut(address to, uint256 time);
+    function undelegateTransactOut(address to) public ownerOrDelegated(1) {
+        Helper.undelegateTransactOut(to, delegatedTransactOutTotal, delegatedTransactOut, _owner);
+        emit UndelegatedTransactOut(to, block.timestamp);  
+    }
+
     function available(uint time) public view returns(uint) {
         uint it = investedTotal[phase];             
         uint igr = investmentGuideRewards[phase];
@@ -332,33 +324,38 @@ contract Pool is ESP1 {
         uint av2 = riwt - igrr;
         uint swosfp = 0;
         uint nsfpn = nowShortFinancePeriodNum(time);
+        uint _dividendingIncome = 0;
+        if(time<dividendsPaymentPeriodEndTime) _dividendingIncome = dividendingIncome;                 
         for(uint i=1; i<=nsfpn; i++)
             swosfp += splitWithdrawnOnShortFinancePeriods[phase][i];
-        return av1 + av2 - swosfp + transactedIn[phase] - transactedOut[phase];
+        return av1 + av2 - swosfp + transactedIn[phase] - transactedOut[phase] - _dividendingIncome;
     }
 
     function availablize(uint val, uint time) public view returns(uint) {
         return shortFinancePeriodsCount > 0 ? (nowShortFinancePeriodNum(time)*val) / shortFinancePeriodsCount : 0;
     }
 
-    function income(uint8 _phase) public view returns(int) {
-        return int(int(transactedIn[_phase]) - int(transactedOut[_phase]) - int(dividendingIncome));
+    function income(uint8 _phase, uint time) public view returns(int) {
+        int _dividendingIncome = 0;
+        if(time<dividendsPaymentPeriodEndTime) _dividendingIncome = int(dividendingIncome);
+        return int(int(transactedIn[_phase]) - int(transactedOut[_phase]) - _dividendingIncome);
     }
 
     event DividendsPaymentAllowed(uint notDividendedIncome, uint _dividendsPaymentPeriodEndTime, uint8 _phase, uint256 time);
     function allowDividendsPayment(uint newDividendsPaymentPeriodEndTime) public onlyOwner needPeriod(1,true) {    
         require(block.timestamp > dividendsPaymentPeriodEndTime, 'Previous dividends payment period not passed yet');
-        int _income = income(phase);
+        require(newDividendsPaymentPeriodEndTime > block.timestamp + 10 days);
+        int _income = income(phase, block.timestamp);
         require(_income > 0, 'Income should be positive number');
         uint forDividendingIncome = uint(_income) * dividendsIncomePercentage / 100;                  
-        dividendingIncome += uint(forDividendingIncome);
-        totalDividendedIncome += uint(forDividendingIncome); 
+        dividendingIncome = uint(forDividendingIncome);
+        totalDividendedIncome = uint(forDividendingIncome); 
         dividendsPaymentPeriodEndTime = newDividendsPaymentPeriodEndTime;        
         emit DividendsPaymentAllowed(uint(forDividendingIncome), dividendsPaymentPeriodEndTime, phase, block.timestamp);
     }
 
-    function dividendsToReceive(address investor) public view returns(uint) {
-        if(_totalSupply == 0 || _balances[investor] == 0) return 0;
+    function dividendsToReceive(address investor, uint time) public view returns(uint) {
+        if(_totalSupply == 0 || _balances[investor] == 0 || time > dividendsPaymentPeriodEndTime) return 0;
         else {
             uint numerator = ((totalDividendedIncome * _balances[investor]) / _totalSupply);
             if(numerator < investorReceivedDividends[investor]) numerator = investorReceivedDividends[investor]; 
@@ -368,7 +365,7 @@ contract Pool is ESP1 {
 
     event DividendsReceived(address investor, uint dividends, uint lockedBalanceTill, uint8 _phase, uint256 time);
     function receiveDividends() public onlyInvestor returns(uint dividends) {
-        dividends = dividendsToReceive(msg.sender);
+        dividends = dividendsToReceive(msg.sender, block.timestamp);
         Helper.receiveDividends(investorReceivedDividends, msg.sender, dividends, dividendsPaymentPeriodEndTime, _balancesLockedTill, transactedOut, phase);       
         dividendingIncome -= dividends;
         Scoin.transfer(msg.sender, dividends);
@@ -383,6 +380,7 @@ contract Pool is ESP1 {
         if(typo==3) airdropCap -= amount;
         _balances[to] += amount;
         _totalSupply += amount;
+        suppliedTotal[phase] += amount;
         emit Transfer(address(0), to, amount);
         emit SharesPaid(typo, to, amount, phase, block.timestamp);        
     }
@@ -404,48 +402,36 @@ contract Pool is ESP1 {
         emit TeamSharesUnlocked(unlockShares(_owner), block.timestamp);        
     }
 
-    event DelegatedTransactOut(address to, uint scoinAmount, uint256 time);
-    function delegateTransactOut(address to, uint amount) public ownerOrDelegated(1) {        
-    	Helper.delegateTransactOut(to, amount, delegatedTransactOutTotal, delegatedTransactOut, _owner);
-        emit DelegatedTransactOut(to, amount, block.timestamp);
-    }
-
-    event UndelegatedTransactOut(address to, uint256 time);
-    function undelegateTransactOut(address to) public ownerOrDelegated(1) {
-        Helper.undelegateTransactOut(to, delegatedTransactOutTotal, delegatedTransactOut, _owner);
-        emit UndelegatedTransactOut(to, block.timestamp);  
-    }
-
-    function investInStartup(address payable _startup, uint amountScoin, bool rejectedWithdrawal) public onlyOwner {        
+    function investInStartup(address payable _Startup, uint amountScoin, bool rejectedWithdrawal) public onlyOwner {        
         require(available(block.timestamp) >= amountScoin, 'Not enough stable coin available');      
         Scoin.approve(swapRouterAddress, amountScoin);
         uint amountWei = Helper.swapScoinToCoin(amountScoin, 0, swapRouter, scoinAddress);
-        startup = Pool(_startup);
-        startup.invest{value:amountWei}(address(this), rejectedWithdrawal);
+        Startup = Pool(_Startup);
+        Startup.invest{value:amountWei}(address(this), rejectedWithdrawal);
         transactedOut[phase] += amountScoin;
     }
 
-    function withdrawStartupInvestment(address payable _startup) public onlyOwner {
-        startup = Pool(_startup);
-        uint amount = startup.withdrawInvestment();
+    function withdrawStartupInvestment(address payable _Startup) public onlyOwner {
+        Startup = Pool(_Startup);
+        uint amount = Startup.withdrawInvestment();
         transactedIn[phase] += amount;    
     }
 
-    function claimStartupInvestmentGuideReward(address payable _startup, address investor) public onlyOwner {
-        startup = Pool(_startup);
-        uint reward = startup.claimInvestmentGuideReward(investor);
+    function claimStartupInvestmentGuideReward(address payable _Startup, address investor) public onlyOwner {
+        Startup = Pool(_Startup);
+        uint reward = Startup.claimInvestmentGuideReward(investor);
         transactedIn[phase] += reward;   
     }
 
-    function receiveDividendsInStartup(address payable _startup) public onlyOwner {
-        startup = Pool(_startup);
-        uint dividends = startup.receiveDividends();
+    function receiveDividendsInStartup(address payable _Startup) public onlyOwner {
+        Startup = Pool(_Startup);
+        uint dividends = Startup.receiveDividends();
         transactedIn[phase] += dividends;    
     } 
 
-    function voteInStartup(address payable _startup, uint _votingId, address addressProposition, uint uintProposition) public onlyOwner {
-        startup = Pool(_startup);
-        startup.vote(_votingId, addressProposition, uintProposition);
+    function voteInStartup(address payable _Startup, uint _votingId, address addressProposition, uint uintProposition) public onlyOwner {
+        Startup = Pool(_Startup);
+        Startup.vote(_votingId, addressProposition, uintProposition);
     }
 
     event KycApproved(address approver, address to, uint256 time);
@@ -462,3 +448,4 @@ contract Pool is ESP1 {
         kycApproveDelegated[to] = false;    
     }    
 }
+
