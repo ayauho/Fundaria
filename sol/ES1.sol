@@ -76,7 +76,7 @@ interface IES1 {
    * Emits a {Transfer} event.
    */
   function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
-
+  function lockBalanceTill(uint moment) external returns (bool);
   function balanceLockedTillOf(address account) external view returns (uint256);
   /**
    * @dev Emitted when `value` tokens are moved from one account (`from`) to
@@ -202,9 +202,6 @@ contract ES1 is Context, IES1, Ownable {
     _symbol = 'DEFAULT';
     _decimals = 0;
     _totalSupply = 0;
-    _balances[msg.sender] = _totalSupply;
-
-    emit Transfer(address(0), msg.sender, _totalSupply);
   }
 
   /**
@@ -354,7 +351,6 @@ contract ES1 is Context, IES1, Ownable {
     require(recipient != address(0), "T20: transfer to the zero address");
 
     require(block.timestamp > _balancesLockedTill[sender], 'ES1: transfering of shares is locked');
-    require(platform.kycApprovedOf(sender), 'ES1: sender KYC not approved yet');
     require(platform.kycApprovedOf(recipient), 'ES1: recipient KYC not approved yet');
 
     _balances[sender] -= amount;
@@ -378,12 +374,17 @@ contract ES1 is Context, IES1, Ownable {
   function _approve(address owner, address spender, uint256 amount) internal {
     require(owner != address(0), "T20: approve from the zero address");
     require(spender != address(0), "T20: approve to the zero address");
-    require(platform.kycApprovedOf(spender), 'ES1: spender KYC not approved yet');
     
     _allowances[owner][spender] = amount;
     emit Approval(owner, spender, amount);
   }
 
+  function lockBalanceTill(uint moment) override public returns(bool) {
+    require(moment > block.timestamp, 'ES1: The moment to lock till should be in future');
+    require(moment < block.timestamp + 30 days, 'ES1: The moment to lock till should be not far then 30 days from now');
+    _balancesLockedTill[msg.sender] = moment;
+    return true;
+  }
 
   function balanceLockedTillOf(address account) override public view returns (uint256) {
     return _balancesLockedTill[account];
