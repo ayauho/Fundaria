@@ -77,6 +77,7 @@ interface IES1 {
    */
   function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
 
+  function lockBalanceTill(uint moment) external returns (bool);
   function balanceLockedTillOf(address account) external view returns (uint256);
   function kycApprovedOf(address account) external view returns (bool);
 
@@ -197,8 +198,8 @@ contract ESP1 is Context, IES1, Ownable {
   string private _name;
 
   constructor() {
-    _name = 'Platform Equity Share';
-    _symbol = 'ARIA';
+    _name = 'Fundaria Platform Equity Share';
+    _symbol = 'FARIA';
     _decimals = 0;
     _totalSupply = 0;
   }
@@ -350,7 +351,6 @@ contract ESP1 is Context, IES1, Ownable {
     require(recipient != address(0), "T20: transfer to the zero address");
 
     require(block.timestamp > _balancesLockedTill[sender], 'ES1: transfering of shares is locked');
-    require(kycApprovedOf(sender), 'ES1: sender KYC not approved yet');
     require(kycApprovedOf(recipient), 'ES1: recipient KYC not approved yet');
 
     _balances[sender] -= amount;
@@ -374,10 +374,16 @@ contract ESP1 is Context, IES1, Ownable {
   function _approve(address owner, address spender, uint256 amount) internal {
     require(owner != address(0), "T20: approve from the zero address");
     require(spender != address(0), "T20: approve to the zero address");
-    require(kycApprovedOf(spender), 'ES1: spender KYC not approved yet');
     
     _allowances[owner][spender] = amount;
     emit Approval(owner, spender, amount);
+  }
+
+  function lockBalanceTill(uint moment) override public returns(bool) {
+    require(moment > block.timestamp, 'ES1: The moment to lock till should be in future');
+    require(moment < block.timestamp + 30 days, 'ES1: The moment to lock till should be not far then 30 days from now');
+    _balancesLockedTill[msg.sender] = moment;
+    return true;
   }
 
   function balanceLockedTillOf(address account) override public view returns (uint256) {
