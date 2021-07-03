@@ -37,8 +37,9 @@ class Testing extends HelperSrc {
         super()
         window._=this        
         ;(async ()=>{
-            await _.init()
+            await _.init()            
             await _.framework()
+            //throw{}           
             await _.cycle()
             await _.renewPrepareSaleOutput()
             //let it = _.toScoin(await _.Pool.methods.investedTotal(_.phase).call())
@@ -48,7 +49,7 @@ class Testing extends HelperSrc {
             //let igr = _.toScoin(await _.Pool.methods.investmentGuideRewards(_.phase).call())
             //log(it, ti,to,r,igr)
             //log('transactedOut',to)
-            //log(await _.Pool.methods.income(_.phase).call())
+            //log(await _.Pool.methods.swapRouterAddress().call())
             //log('investmentGuideRewardAvailable', _.toScoin(await _.Pool.methods.investmentGuideRewardAvailable(_.now,_.owner,_.phase).call() ))
             //log('dividendingIncome', _.toScoin(await _.Pool.methods.dividendingIncome().call() ))
             //log('allowance', _.toScoin(await _.SCOIN.methods.allowance(_.fundariaAddress,_.swapRouterAddress).call() ))
@@ -57,7 +58,7 @@ class Testing extends HelperSrc {
     }
     async init(){
         let _=this
-        if(gets.pool)_.isPool=true
+        if(gets.startup)_.isStartup=true
         _.names = [COIN+' balance',SCOIN+' balance','Shares balance','Invested on phase','Investment guide on phase','Investment guide reward total now','Ig claimed reward','Ig reward available','Dividends to receive']
         _.address0='0x0000000000000000000000000000000000000000'
         _.gas=6000000
@@ -71,17 +72,21 @@ class Testing extends HelperSrc {
         _.scoinAddress = localStorage.scoinAddress
         _.swapRouterAddress = localStorage.swapRouterAddress
         _.fundariaAddress = localStorage.fundariaAddress
-        //l(_.scoinAddress, _.swapRouterAddress, _.fundariaAddress, _.poolAddress)
-        _.abi = await _.ax({m:'GET',p:'output/Pool/Pool.abi'})
+        //l(_.scoinAddress, _.swapRouterAddress, _.fundariaAddress, _.helperAddress)
+        _.abi = await _.ax({m:'GET',p:'output/Pool/Pool.abi?'+ (+new Date()) })
         _.pool = new _.web3.eth.Contract(_.abi, _.poolAddress)        
-        _.fAbi = await _.ax({m:'GET',p:'output/Fundaria/Pool.abi'})
+        _.fAbi = await _.ax({m:'GET',p:'output/Fundaria/Pool.abi?'+ (+new Date()) })
         _.fundaria = new _.web3.eth.Contract(_.fAbi, _.fundariaAddress)
-        if(_.isPool){
+        if(_.isStartup){
             _.Pool=_.pool
             _.PoolAddress=_.poolAddress
+            _.Startup = _.fundaria
+            _.StartupAddress=_.fundariaAddress
         }else{
             _.Pool=_.fundaria
-            _.PoolAddress=_.fundariaAddress            
+            _.PoolAddress=_.fundariaAddress
+            _.Startup=_.pool
+            _.StartupAddress=_.poolAddress                        
         }
         _.logId=_.PoolAddress                
         _.pks.ech((pk,i)=> {            
@@ -89,7 +94,8 @@ class Testing extends HelperSrc {
             l('Investor'+i,ac.address)
             _.acs.push(ac.address)
             _.web3.eth.accounts.wallet.add(pk)
-        })        
+        })
+               
         _.scoinAbi = await _.ax({m:'GET',p:'output/BUSDTestnet/BUSD.abi'})
         _.SCOIN = new _.web3.eth.Contract(_.scoinAbi, _.scoinAddress)
         _.owner = await _.Pool.methods.owner().call()
@@ -107,7 +113,7 @@ class Testing extends HelperSrc {
             'Short finance period':'shortFinancePeriod','Long finance period':'longFinancePeriod'}
         
         l(COIN+'/'+SCOIN, _.scoinCourse)
-        //l(await _.Pool.methods.dividendsToReceive(_.address0).call())                        
+        //l(await _.Pool.methods.dividendsToReceive(_.address0,_.nowTS).call())                        
     }
     framework(){
         let $es, $e
@@ -156,14 +162,14 @@ class Testing extends HelperSrc {
             i++
             _.$('+name').html(`<b>${i}:</b> ${name}`).to($names)
         })
-        _.$('+invests').to(_.$test)       
+        _.$('+invests').to(_.$test)               
         for(let i=0;i<_.acs.length;i++) _.$invest(_.acs[i],i)        
         _.$prepareSale()
         _.$prepareLongFinancePeriod()
         _.$setVotings()        
         _.$adp = _.$('+button').acl('margin-left').html('Allow dividends payment').to(_.$test)
-        _.$('+button').acl('margin-left').acl('margin-top').html(_.isPool?'Unlock team and fundaria shares':'Unlock team shares').to(_.$test).onclick=async e=>{
-            if(_.isPool)l('---Action: Unlock team and fundaria shares',_.nowTS)
+        _.$('+button').acl('margin-left').acl('margin-top').html(_.isStartup?'Unlock team and fundaria shares':'Unlock team shares').to(_.$test).onclick=async e=>{
+            if(_.isStartup)l('---Action: Unlock team and fundaria shares',_.nowTS)
             else l('---Action: Unlock team shares',_.nowTS) 
             l('State before:')
             l('lockedTeamShares',await _.Pool.methods.balancesLocked(_.phase,_.owner).call())
@@ -171,7 +177,7 @@ class Testing extends HelperSrc {
             l('teamShares',await _.Pool.methods.balanceOf(_.owner).call())
             l('fundariaShares',await _.Pool.methods.balanceOf(_.fundariaAddress).call())
             l('nowShortFinancePeriodNum', await _.Pool.methods.nowShortFinancePeriodNum(_.now).call())                    
-            if(_.isPool)await _.Pool.methods.unlockTeamAndPlatformShares().send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
+            if(_.isStartup)await _.Pool.methods.unlockTeamAndPlatformShares().send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
             else await _.Pool.methods.unlockTeamShares().send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
             await _.renewPoolOutput()
             l('nowShortFinancePeriodNum', _.$sfPeriod.html())
@@ -186,15 +192,15 @@ class Testing extends HelperSrc {
             l('---Action: Allowing dividends payment',_.nowTS)
             l('State before:')
             l('dividendingIncome', _.toScoin(await _.Pool.methods.dividendingIncome().call())) 
-            await _.Pool.methods.allowDividendsPayment(_.nowTS+180).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
-            for(let i=0;i<_.acs.length;i++) _.$invests[i].dtr.html( _.toScoin(await  _.Pool.methods.dividendsToReceive(_.acs[i]).call()))
+            await _.Pool.methods.allowDividendsPayment(_.nowTS+ 60*60*24*11 ).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
+            for(let i=0;i<_.acs.length;i++) _.$invests[i].dtr.html( _.toScoin(await  _.Pool.methods.dividendsToReceive(_.acs[i],_.nowTS).call()))
             await _.renewPoolOutput()
             l('State after:')
             l('dividendingIncome', _.toScoin(await _.Pool.methods.dividendingIncome().call()))
             l('dividendsPaymentPeriodEndTime', _.toDate(await _.Pool.methods.dividendsPaymentPeriodEndTime().call()) )
             l('Action completed.',_.nowTS)           
         }        
-        if(!_.isPool)_.$investInStartup()
+        _.$investInStartup()
         _.$save()
     }
     get $chooseAddress(){
@@ -209,7 +215,7 @@ class Testing extends HelperSrc {
         for(let i=0;i<_.acs.length;i++){
             if(_.acs[i]==addr) return num? i: 'Investor'+i
         }
-        return '-'
+        return addr
     }
     toWei(eth){
         return _.web3.utils.toWei(eth.toString(),'ether')
@@ -231,7 +237,7 @@ class Testing extends HelperSrc {
     async scoinBalance(from){
         return await _.toScoin(await _.SCOIN.methods.balanceOf(from).call())    
     }    
-    toDate(ts){return Math.round(new Date(ts)/1000)}
+    toDate(ts){return Math.round(+new Date(+ts)/1000)}
     get nowTS(){return Math.round(new Date()/1000)}
     async $invest(addr,n){
         let $inv={addr}
@@ -262,7 +268,7 @@ class Testing extends HelperSrc {
         $inv.dtof=_.$({type:'text',placeholder:SCOIN,value:30},'input').to($es)
         $inv.un=_.$('+button').html('undelegate').to($es)
         $inv.rd=_.$('+button').html('Receive dividends').to($es)
-        if( !(_.isPool && n==2) )$inv.cigr=_.$('+button').html('Claim ig reward').to($es)        
+        if( !(_.isStartup && n==2) )$inv.cigr=_.$('+button').html('Claim ig reward').to($es)        
 
         $es=_.$('+elements').to($i) 
         
@@ -284,7 +290,7 @@ class Testing extends HelperSrc {
             let investmentGuideRewardOfPhase = _.toScoin(await _.invested(addr,'investmentGuideReward'))
             let investmentGuideClaimedRewardOfPhase = _.toScoin((await _.Pool.methods.invested(addr,_.phase).call()).investmentGuideClaimedReward)
             let investmentGuideRewardAvailable = _.toScoin(await _.Pool.methods.investmentGuideRewardAvailable(_.now,addr,_.phase).call())
-            let dividendsToReceive = _.toScoin(await  _.Pool.methods.dividendsToReceive(addr).call())            
+            let dividendsToReceive = _.toScoin(await  _.Pool.methods.dividendsToReceive(addr,_.nowTS).call())            
             $inv.coin.html(coinBalance)
             $inv.scoin.html(scoinBalance)
             $inv.sb.html(sharesBalance)
@@ -329,7 +335,7 @@ class Testing extends HelperSrc {
         $inv.invest.onclick = async e=>{
             let next=n+1
             let ig=_.acs[next]
-            if(next==_.acs.length && _.isPool)ig=_.fundariaAddress
+            if(next==_.acs.length)ig=_.fundariaAddress
             l('---Action: Investing from '+investor,_.nowTS)
             l('State before:')            
             await logInvBefore(addr)            
@@ -373,16 +379,17 @@ class Testing extends HelperSrc {
             if(!_.ownerLastVotingId) _.ownerLastVotingId = await _.Pool.methods.votingId().call()
             l('---Action: Vote for owner by '+investor,_.nowTS)
             l('State before:')
-            l('voteForOwnerQuorum', await _.Pool.methods.votingQuorum(_.ownerLastVotingId).call())
-            l('voteForOwnerWinAddress', await _.Pool.methods.addressPropositionMaxCount(_.ownerLastVotingId).call())
+            l('voteForOwnerQuorum', +(await _.Pool.methods.votings(_.ownerLastVotingId).call()).quorumCount * 100 / +(await _.Pool.methods.totalSupply().call()) )
+            l('voteForOwnerWinAddress', (await _.Pool.methods.votings(_.ownerLastVotingId).call()).addressPropositionMaxCount)
             let ownerPropo = $inv.ownerPropo.options[$inv.ownerPropo.selectedIndex].id           
             l('proposedValue',ownerPropo) 
             await _.Pool.methods.vote(_.ownerLastVotingId,ownerPropo,0).send({from:addr,gas:_.gas,gasPrice:_.gasPrice})
-            let winAddress=await _.Pool.methods.addressPropositionMaxCount(_.ownerLastVotingId).call()            
+            let winAddress= (await _.Pool.methods.votings(_.ownerLastVotingId).call()).addressPropositionMaxCount            
             l('State after:')
-            l('voteForOwnerQuorum', await _.Pool.methods.votingQuorum(_.ownerLastVotingId).call())
+            let quorum = +(await _.Pool.methods.votings(_.ownerLastVotingId).call()).quorumCount * 100 / +(await _.Pool.methods.totalSupply().call())
+            l('voteForOwnerQuorum', quorum )
             l('voteForOwnerWinAddress', winAddress)           
-            _.$ownerQ.html(await _.Pool.methods.votingQuorum(_.ownerLastVotingId).call())
+            _.$ownerQ.html(quorum)
             _.$ownerWinAddr.html(winAddress)
             l('Action completed.',_.nowTS)
         }
@@ -391,18 +398,16 @@ class Testing extends HelperSrc {
             let divPropo = $inv.divPropo.value
             l('---Action: Vote for dividends share in income by '+investor,_.nowTS)
             l('State before:')
-            l('voteForDividendsQuorum', await _.Pool.methods.votingQuorum(_.dividendsLastVotingId).call())
-            l('voteForDividendsWinUint', await _.Pool.methods.uintWinProposition(_.dividendsLastVotingId).call())
-            l('proposedValue',divPropo)            
-            //l('uintCount',(await _.Pool.methods.votings(_.dividendsLastVotingId).call()).uintCount)
-            //return
-                        
+            l('voteForDividendsQuorum', +(await _.Pool.methods.votings(_.dividendsLastVotingId).call()).quorumCount * 100 / +await _.Pool.methods.totalSupply().call() )
+            l('voteForDividendsWinUint', +(await _.Pool.methods.votings(_.dividendsLastVotingId).call()).uintSum / +(await _.Pool.methods.votings(_.dividendsLastVotingId).call()).uintCount )
+            l('proposedValue',divPropo)                       
             await _.Pool.methods.vote(_.dividendsLastVotingId,_.address0,divPropo).send({from:addr,gas:_.gas,gasPrice:_.gasPrice})
-            let uintWinProposition = await _.Pool.methods.uintWinProposition(_.dividendsLastVotingId).call()
+            let uintWinProposition = await _.uintWinProposition(_.Pool,_.dividendsLastVotingId)
             l('State after:')
-            l('voteForDividendsQuorum', await _.Pool.methods.votingQuorum(_.dividendsLastVotingId).call())
+            let quorum = +(await _.Pool.methods.votings(_.dividendsLastVotingId).call()).quorumCount * 100 / +(await _.Pool.methods.totalSupply().call())
+            l('voteForDividendsQuorum', quorum )
             l('voteForDividendsWinUint', uintWinProposition)  
-            _.$dividendsQ.html( await _.Pool.methods.votingQuorum(_.dividendsLastVotingId).call() )
+            _.$dividendsQ.html( quorum )
             _.$dividendsWinUint.html( uintWinProposition )
             l('Action completed.',_.nowTS)           
         }
@@ -410,15 +415,16 @@ class Testing extends HelperSrc {
             if(!_.rightLastVotingId) _.rightLastVotingId = await _.Pool.methods.votingId().call()
             l('---Action: Vote for right to sell startup shares by '+investor,_.nowTS)
             l('State before:')
-            l('voteForRightQuorum', await _.Pool.methods.votingQuorum(_.rightLastVotingId).call())
-            l('voteForRightWinAddress', await _.Pool.methods.addressPropositionMaxCount(_.rightLastVotingId).call())
+            l('voteForRightQuorum', +(await _.Pool.methods.votings(_.rightLastVotingId).call()).quorumCount * 100 / +(await _.Pool.methods.totalSupply().call()) )
+            l('voteForRightWinAddress', +(await _.Pool.methods.votings(_.rightLastVotingId).call()).addressPropositionMaxCount)
             let rightPropo = _.poolAddress           
             await _.Pool.methods.vote(_.rightLastVotingId,rightPropo,0).send({from:addr,gas:_.gas,gasPrice:_.gasPrice})
-            let winAddress=await _.Pool.methods.addressPropositionMaxCount(_.rightLastVotingId).call()            
+            let winAddress = (await _.Pool.methods.votings(_.rightLastVotingId).call()).addressPropositionMaxCount           
             l('State after:')
-            l('voteForRightQuorum', await _.Pool.methods.votingQuorum(_.rightLastVotingId).call())
+            let quorum = +(await _.Pool.methods.votings(_.rightLastVotingId).call()).quorumCount * 100 / +(await _.Pool.methods.totalSupply().call())
+            l('voteForRightQuorum', quorum )
             l('voteForRightWinAddress', winAddress)          
-            _.$rightQ.html(await _.Pool.methods.votingQuorum(_.rightLastVotingId).call())
+            _.$rightQ.html( quorum )
             _.$rightWinAddr.html(winAddress)
             l('Action completed.',_.nowTS)
         }        
@@ -463,7 +469,7 @@ class Testing extends HelperSrc {
             l('State before:')
             l('scoinBalanceOf'+investor, await _.scoinBalance(addr))
             l('poolScoinBalance', _.$poolScoinBalance.html())             
-            l('dividendsToReceive',_.toScoin(await  _.Pool.methods.dividendsToReceive(addr).call()))
+            l('dividendsToReceive',_.toScoin(await  _.Pool.methods.dividendsToReceive(addr,_.nowTS).call()))
             l('_balancesLockedTill', await _.Pool.methods.balanceLockedTillOf(addr).call())
             l('investorReceivedDividends of '+investor, _.toScoin( await _.Pool.methods.investorReceivedDividends(addr).call() )) 
             l('dividendsPaymentPeriodEndTime', await _.Pool.methods.dividendsPaymentPeriodEndTime().call())           
@@ -473,7 +479,7 @@ class Testing extends HelperSrc {
             l('State after:')
             l('scoinBalanceOf'+investor, await _.scoinBalance(addr))
             l('poolScoinBalance', _.$poolScoinBalance.html())             
-            l('dividendsToReceive',_.toScoin(await  _.Pool.methods.dividendsToReceive(addr).call()))
+            l('dividendsToReceive',_.toScoin(await  _.Pool.methods.dividendsToReceive(addr,_.nowTS).call()))
             l('_balancesLockedTill', await _.Pool.methods.balanceLockedTillOf(addr).call())
             l('investorReceivedDividends of '+investor, _.toScoin( await _.Pool.methods.investorReceivedDividends(addr).call() ))                         
             l('Action completed.',_.nowTS)
@@ -500,9 +506,12 @@ class Testing extends HelperSrc {
             l('Action completed.',_.nowTS)              
         }              
         _.$invests.push($inv)
-        await renewInvestorOutput(addr)
+        await renewInvestorOutput(addr)        
         await _.renewPoolOutput()                                                               
     }
+    async uintWinProposition(_Pool,vid){
+        return +(await _Pool.methods.votings(vid).call()).uintSum / +(await _Pool.methods.votings(vid).call()).uintCount    
+    }    
     async cycle(){
         _.lastPeriod=_.period
         _.period = await _.Pool.methods.period().call()
@@ -522,7 +531,7 @@ class Testing extends HelperSrc {
         _.$phase.html(_.phase = await _.Pool.methods.phase().call())
         _.$invested.html(_.toScoin(await _.Pool.methods.investedTotal(_.phase).call()))
         _.$withdrawn.html(_.toScoin(await _.Pool.methods.withdrawnTotal(_.phase).call()))
-        _.$claimed.html( _.toScoin(await _.Pool.methods.claimedIGRTotal(_.phase).call()) )
+        _.$claimed.html( _.toScoin(await _.Pool.methods.claimedIGRTotal(_.phase).call()) )        
         _.$sfPeriod.html(await _.Pool.methods.nowShortFinancePeriodNum(_.now).call())
         _.$lockedTeamShares.html(await _.Pool.methods.balancesLocked(_.phase,_.owner).call())
         _.$lockedFundariaShares.html(await _.Pool.methods.balancesLocked(_.phase,_.fundariaAddress).call())
@@ -531,7 +540,8 @@ class Testing extends HelperSrc {
         _.$totalSupply.html(await _.Pool.methods.totalSupply().call())
         _.$poolScoinBalance.html(await _.scoinBalance(_.PoolAddress))
         //_.$poolCoinBalance.html(await _.coinBalance(_.PoolAddress))
-        _.$income.html(_.toScoin(await _.Pool.methods.income(_.phase).call()))
+        //log()
+        _.$income.html(_.toScoin(await _.Pool.methods.income(_.phase,_.nowTS).call()))
         _.$available.html(_.toScoin(await _.Pool.methods.available(_.now).call()))
         for(let i=0;i<_.acs.length;i++) _.$invests[i].igrant.html( _.toScoin(await  _.Pool.methods.investmentGuideRewardAvailable(_.now,_.acs[i],_.phase).call()))       
     }
@@ -555,17 +565,25 @@ class Testing extends HelperSrc {
         l('Action completed.',_.nowTS)
     }
     $prepareSale(){
-        let $b,$b2,$cntr=_.$('+cntr').to(_.$test)
+        let $b0, $b,$b2,$cntr=_.$('+cntr').to(_.$test),$addr
         _.prepareSale=_.$('+prepare-sale').to($cntr)
         let $es=_.$('+elements').to(_.prepareSale)
-        if(!_.isPool){
-            $b=_.$('+button').html('Approve KYC').to($es)
+        if(!_.isStartup){
+            $b=_.$('+button').html('Approve KYC to Investors').to($es)
             $b.onclick=async e=>{
                 for(let i=0;i<_.acs.length;i++){
                     await _.approveKyc(_.acs[i])
                 }       
             }
+            $b0=_.$('+button').html('Approve KYC to:').to($es)        
+            $addr = _.$({placeholder:'0x',type:'text'},'input').css('width','150px').to($es)
+            $addr.value = _.StartupAddress        
+            $b0.onclick=async e=>{
+                await _.approveKyc($addr.value)       
+            }        
         }
+
+        $es=_.$('+elements').to(_.prepareSale)
         $b2=_.$('+button').html('Prepare sale').to($es)
         $b2.onclick=async e=>{                        
             l('---Action: Prepare sale', _.nowTS)
@@ -590,7 +608,7 @@ class Testing extends HelperSrc {
             let airdropCap = 100000
             let args
             args=[poolCap,saleStartTime,saleEndTime,shortFinancePeriod,longFinancePeriod,salePrice,saleShare,teamShare,investmentGuidesRewardShare,bountyCap,presaleCap,airdropCap]
-            if(_.isPool) args.splice(8, 0, fundariaShare)
+            if(_.isStartup) args.splice(8, 0, fundariaShare)
             await _.Pool.methods.prepareSale(...args).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
             await _.renewPoolOutput()
             await _.renewPrepareSaleOutput()        
@@ -676,7 +694,7 @@ class Testing extends HelperSrc {
             let startupAddress = _.poolAddress            
             let abi = await _.ax({m:'GET',p:'output/Pool/Pool.abi'})
             let startup = new _.web3.eth.Contract(abi, startupAddress)
-            let quorum = await _.Pool.methods.votingQuorum(_.rightLastVotingId).call()
+            let quorum = await _.votingQuorum(_.Pool,_.rightLastVotingId)
             _.$rightQ.html(quorum)
             _.$rightWinAddr.html(startupAddress)                                                  
             l('---Action: Apply voting results of right to sell shares',_.nowTS)
@@ -706,8 +724,8 @@ class Testing extends HelperSrc {
             l('Action completed.',_.nowTS)  
         }
         $b[1].onclick = async e=>{
-            let quorum = await _.Pool.methods.votingQuorum(_.ownerLastVotingId).call()
-            let winAddress = await _.Pool.methods.addressPropositionMaxCount(_.ownerLastVotingId).call()
+            let quorum = await _.votingQuorum(_.Pool,_.ownerLastVotingId)
+            let winAddress = (await _.Pool.methods.votings(_.ownerLastVotingId).call()).addressPropositionMaxCount
             _.$ownerQ.html(quorum)
             _.$ownerWinAddr.html( winAddress )
             l('---Action: Apply voting results for owner',_.ownerLastVotingId)
@@ -727,6 +745,7 @@ class Testing extends HelperSrc {
             l('State before:')
             l('votingId', await _.Pool.methods.votingId().call())
             let endTime=_.now+250
+            log('votingPrice', _.toCoin(_.votingPrice))
             await _.Pool.methods.setVoting(2,_.now+30,endTime).send({from:_.owner, value: _.votingPrice,gas:_.gas,gasPrice:_.gasPrice})
             _.votingId = _.dividendsLastVotingId = await _.Pool.methods.votingId().call()
             l('State after:')
@@ -736,8 +755,8 @@ class Testing extends HelperSrc {
             l('Action completed.',_.nowTS)            
         }
         $b[3].onclick = async e=>{
-            let quorum = await _.Pool.methods.votingQuorum(_.dividendsLastVotingId).call()
-            let winUint = await _.Pool.methods.uintWinProposition(_.dividendsLastVotingId).call()
+            let quorum = await _.votingQuorum(_.Pool,_.dividendsLastVotingId)
+            let winUint = await _.uintWinProposition(_.Pool,_.dividendsLastVotingId)
             _.$dividendsQ.html(quorum)
             _.$dividendsWinUint.html(winUint)
             l('---Action: Apply voting results for dividends',_.nowTS)
@@ -750,6 +769,9 @@ class Testing extends HelperSrc {
             l('dividendsIncomePercentage', await _.Pool.methods.dividendsIncomePercentage().call())
             l('Action completed.',_.nowTS)            
         }                                        
+    }
+    async votingQuorum(_Pool,vid){
+        return +(await _Pool.methods.votings(vid).call()).quorumCount * 100 / +await _Pool.methods.totalSupply().call()
     }
     async transactIn(from,coin){
         let investor = _.investorFromAddr(from)
@@ -784,7 +806,7 @@ class Testing extends HelperSrc {
         let scoinWei = await _.toWei(scoin)
         l('poolScoinBalance',await _.scoinBalance(_.PoolAddress))
         l('scoinBalanceOf'+recipient, await _.scoinBalance(to))         
-        l('income',_.toScoin(await _.Pool.methods.income(_.phase).call()))
+        l('income',_.toScoin(await _.Pool.methods.income(_.phase,_.nowTS).call()))
         l('available', _.toScoin(await _.Pool.methods.available(_.now).call()))        
         await _.Pool.methods.transactOut(to,scoinWei).send({from,gas:_.gas,gasPrice:_.gasPrice})
         await _.renewPoolOutput()
@@ -802,24 +824,21 @@ class Testing extends HelperSrc {
         let $am=_.$({type:'text'},'input').to($cntr)
         $am.value=100
         $iis.onclick=async e=>{
-            let scoin = _.toWei($am.value)
-            let startupAddress = _.poolAddress
-            let abi = await _.ax({m:'GET',p:'output/Pool/Pool.abi'})
-            let startup = new _.web3.eth.Contract(abi, startupAddress)                        
+            let scoin = _.toWei($am.value)                     
             l('---Action: Invest in startup',_.nowTS)
             l('State before:')
-            l('startupAddress',startupAddress)            
+            l('startupAddress',_.StartupAddress)            
             //l('poolCoinBalance', await _.coinBalance(_.PoolAddress))
             l('poolScoinBalance', await _.scoinBalance(_.PoolAddress))
-            l('fundariaStartupSharesBalance', await startup.methods.balanceOf(_.fundariaAddress).call())
+            l('startupSharesBalance', await _.Startup.methods.balanceOf(_.PoolAddress).call())
             l('investedScoin',$am.value)
             //await _.SCOIN.methods.approve(_.swapRouterAddress, scoin).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
-            await _.Pool.methods.investInStartup(startupAddress, scoin, false).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
+            await _.Pool.methods.investInStartup(_.StartupAddress, scoin, false).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
             await _.renewPoolOutput()
             l('State after:')            
             //l('poolCoinBalance', _.$poolCoinBalance.html())
             l('poolScoinBalance', _.$poolScoinBalance.html())
-            l('fundariaStartupSharesBalance', await startup.methods.balanceOf(_.fundariaAddress).call())
+            l('startupSharesBalance', await _.Startup.methods.balanceOf(_.PoolAddress).call())
             l('Action completed.',_.nowTS)
         }
         _.$withdrawInvestment()
@@ -828,21 +847,18 @@ class Testing extends HelperSrc {
         let $cntr=_.$('+cntr').to(_.$test)
         let $iis=_.$('+button').html('withdraw investment from startup').to($cntr)
         $iis.onclick=async e=>{
-            let startupAddress = _.poolAddress
-            let abi = await _.ax({m:'GET',p:'output/Pool/Pool.abi'})
-            let startup = new _.web3.eth.Contract(abi, startupAddress)
             l('---Action: Withdraw investment from startup',_.nowTS)
             l('State before:')
-            l('startupAddress',startupAddress)            
+            l('startupAddress',_.StartupAddress)            
             //l('poolCoinBalance', await _.coinBalance(_.PoolAddress))
             l('poolScoinBalance', await _.scoinBalance(_.PoolAddress))
-            l('fundariaStartupSharesBalance', await startup.methods.balanceOf(_.fundariaAddress).call())
-            await _.Pool.methods.withdrawStartupInvestment(startupAddress).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
+            l('startupSharesBalance', await _.Startup.methods.balanceOf(_.PoolAddress).call())
+            await _.Pool.methods.withdrawStartupInvestment(_.StartupAddress).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
             await _.renewPoolOutput()
             l('State after:')            
             //l('poolCoinBalance', _.$poolCoinBalance.html())
             l('poolScoinBalance', _.$poolScoinBalance.html())
-            l('fundariaStartupSharesBalance', await startup.methods.balanceOf(_.fundariaAddress).call())
+            l('startupSharesBalance', await _.Startup.methods.balanceOf(_.PoolAddress).call())
             l('Action completed.',_.nowTS)            
         }
         _.$claimInvestmentGuideReward()                   
@@ -851,22 +867,19 @@ class Testing extends HelperSrc {
         let $cntr=_.$('+cntr').to(_.$test)
         let $iis=_.$('+button').html('claim investment guide reward in startup').to($cntr)
         $iis.onclick=async e=>{
-            let startupAddress = _.poolAddress
-            let abi = await _.ax({m:'GET',p:'output/Pool/Pool.abi'})
-            let startup = new _.web3.eth.Contract(abi, startupAddress)
             let investorAddr = _.acs[2]
             let investor = _.investorFromAddr(investorAddr) 
             l('---Action: Claim investment guide reward from startup',_.nowTS)
             l('State before:')
-            l('startupAddress',startupAddress)
+            l('startupAddress',_.StartupAddress)
             l('investedBy',investor)            
             l('poolScoinBalance', await _.scoinBalance(_.PoolAddress))
-            l('startupInvestmentGuideRewardAvailable',_.toScoin(await startup.methods.investmentGuideRewardAvailable(_.now,investorAddr,_.phase).call()))             
-            await _.Pool.methods.claimStartupInvestmentGuideReward(startupAddress,investorAddr).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
+            l('startupInvestmentGuideRewardAvailable',_.toScoin(await _.Startup.methods.investmentGuideRewardAvailable(_.now,investorAddr,_.phase).call()))             
+            await _.Pool.methods.claimStartupInvestmentGuideReward(_.StartupAddress,investorAddr).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
             await _.renewPoolOutput()
             l('State after:')            
             l('poolScoinBalance', _.$poolScoinBalance.html())
-            l('startupInvestmentGuideRewardAvailable',_.toScoin(await startup.methods.investmentGuideRewardAvailable(_.now,investorAddr,_.phase).call()))
+            l('startupInvestmentGuideRewardAvailable',_.toScoin(await _.Startup.methods.investmentGuideRewardAvailable(_.now,investorAddr,_.phase).call()))
             l('Action completed.',_.nowTS)        
         }
         _.$voteInStartupForDividends()                
@@ -875,22 +888,19 @@ class Testing extends HelperSrc {
         let $cntr=_.$('+cntr').to(_.$test)
         let $iis=_.$('+button').html('vote in startup for dividends').to($cntr)
         $iis.onclick=async e=>{
-            let startupAddress = _.poolAddress
-            let abi = await _.ax({m:'GET',p:'output/Pool/Pool.abi'})
-            let startup = new _.web3.eth.Contract(abi, startupAddress)
-            let startupLastVotingId = await startup.methods.votingId().call()
-            let quorum = await startup.methods.votingQuorum(startupLastVotingId).call() 
+            let startupLastVotingId = await _.Startup.methods.votingId().call()
+            let quorum = await _.votingQuorum(_.Startup,startupLastVotingId) 
             l('---Action: Vote in startup for dividends', _.nowTS)
             l('State before:')
-            l('startupAddress',startupAddress)            
+            l('startupAddress',_.StartupAddress)            
             l('startupLastVotingId',startupLastVotingId)
             let uintProposition=80
             l('quorum', quorum)
             l('uintProposition',uintProposition)            
-            await _.Pool.methods.voteInStartup(startupAddress,startupLastVotingId,_.address0,uintProposition).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})            
+            await _.Pool.methods.voteInStartup(_.StartupAddress,startupLastVotingId,_.address0,uintProposition).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})            
             l('State after:')
-            l('quorum', await startup.methods.votingQuorum(startupLastVotingId).call())
-            l('startupUintWinProposition', await startup.methods.uintWinProposition(startupLastVotingId).call())
+            l('quorum', await _.votingQuorum(_.Startup,startupLastVotingId))
+            l('startupUintWinProposition', await _.uintWinProposition(_.Startup,startupLastVotingId))
             l('Action completed.',_.nowTS)
         }
         _.$voteInStartupForOwner()        
@@ -899,22 +909,19 @@ class Testing extends HelperSrc {
         let $cntr=_.$('+cntr').to(_.$test)
         let $iis=_.$('+button').html('vote in startup for owner').to($cntr)
         $iis.onclick=async e=>{
-            let startupAddress = _.poolAddress
-            let abi = await _.ax({m:'GET',p:'output/Pool/Pool.abi'})
-            let startup = new _.web3.eth.Contract(abi, startupAddress)
-            let startupLastVotingId = await startup.methods.votingId().call()
-            let quorum = await startup.methods.votingQuorum(startupLastVotingId).call() 
+            let startupLastVotingId = await _.Startup.methods.votingId().call()
+            let quorum = await _.votingQuorum(_.Startup,startupLastVotingId) 
             l('---Action: Vote in startup for owner', _.nowTS)
             l('State before:')
-            l('startupAddress',startupAddress)            
+            l('startupAddress',_.StartupAddress)            
             l('startupLastVotingId',startupLastVotingId)
             let addressProposition=_.acs[1]
             l('quorum', quorum)
-            l('voteForOwnerWinAddress', await startup.methods.addressPropositionMaxCount(startupLastVotingId).call())           
-            await _.Pool.methods.voteInStartup(startupAddress,startupLastVotingId,addressProposition,0).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
+            l('voteForOwnerWinAddress', (await _.Startup.methods.votings(startupLastVotingId).call()).addressPropositionMaxCount)           
+            await _.Pool.methods.voteInStartup(_.StartupAddress,startupLastVotingId,addressProposition,0).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
             l('State after:')
-            l('quorum', await startup.methods.votingQuorum(startupLastVotingId).call())
-            l('voteForOwnerWinAddress', await startup.methods.addressPropositionMaxCount(startupLastVotingId).call())
+            l('quorum', await _.votingQuorum(_.Startup,startupLastVotingId))
+            l('voteForOwnerWinAddress', (await _.Startup.methods.votings(startupLastVotingId).call()).addressPropositionMaxCount)
             l('Action completed.',_.nowTS)
         }
         _.$receiveDividendsInStartup()           
@@ -922,19 +929,16 @@ class Testing extends HelperSrc {
     $receiveDividendsInStartup(){
         let $cntr=_.$('+cntr').to(_.$test)
         let $rdis=_.$('+button').html('receive dividends in startup').to($cntr)
-        $rdis.onclick=async e=>{
-            let startupAddress = _.poolAddress
-            let abi = await _.ax({m:'GET',p:'output/Pool/Pool.abi'})
-            let startup = new _.web3.eth.Contract(abi, startupAddress)         
+        $rdis.onclick=async e=>{        
             l('---Action: Receive dividends in startup', _.nowTS)
             l('State before:')
             l('poolScoinBalance', await _.scoinBalance(_.PoolAddress))
-            l('fundariaStartupReceivedDividends', _.toScoin( await startup.methods.investorReceivedDividends(_.fundariaAddress).call() )) 
-            await _.Pool.methods.receiveDividendsInStartup(_.poolAddress).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
+            l('startupReceivedDividends', _.toScoin( await _.Startup.methods.investorReceivedDividends(_.PoolAddress).call() )) 
+            await _.Pool.methods.receiveDividendsInStartup(_.StartupAddress).send({from:_.owner,gas:_.gas,gasPrice:_.gasPrice})
             await _.renewPoolOutput()
             l('State after:')
             l('poolScoinBalance', _.$poolScoinBalance.html())
-            l('fundariaStartupReceivedDividends', _.toScoin( await startup.methods.investorReceivedDividends(_.fundariaAddress).call() ))
+            l('startupReceivedDividends', _.toScoin( await _.Startup.methods.investorReceivedDividends(_.PoolAddress).call() ))
             l('Action completed.', _.nowTS)
         }                
     }
