@@ -5,7 +5,7 @@ https://fundaria.com/test/sc/deploy-bsc.html
 
 https://fundaria.com/test/sc/complex-testing-bsc.html
 
-https://fundaria.com/test/sc/complex-testing-bsc.html?pool=1
+https://fundaria.com/test/sc/complex-testing-bsc.html?startup=1
 
 
 
@@ -36,7 +36,7 @@ Testing:
 
 complex-testing-bsc.html (Fundaria pool)
 
-complex-testing-bsc.html?pool=1 (a startup pool)
+complex-testing-bsc.html?startup=1 (a startup pool)
 
 
 ##/logs:
